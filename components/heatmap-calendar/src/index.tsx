@@ -1,1 +1,0 @@
-export { HeatmapCalendar } from './HeatmapCalendar'

@@ -1,1 +1,0 @@
-export { RegexTesterInput } from "./RegexTesterInput";

@@ -1,0 +1,36 @@
+{
+  "name": "paradigm-custom-components",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@tryretool/custom-component-support": "latest",
+    "moment-timezone": "^0.6.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "npx retool-ccl dev",
+    "deploy": "npx retool-ccl deploy",
+    "test": "vitest"
+  },
+  "retoolCustomComponentLibraryConfig": {
+    "name": "ParadigmCustomComponents",
+    "label": "Paradigm Custom Components",
+    "description": "A library for all custom components built for Retool apps.",
+    "entryPoint": "src/index.tsx",
+    "outputPath": "dist"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.55",
+    "@typescript-eslint/eslint-plugin": "^7.3.1",
+    "@typescript-eslint/parser": "^7.3.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.34.1",
+    "postcss-modules": "^6.0.0",
+    "prettier": "^3.0.3",
+    "vitest": "^4.0.17"
+  }
+}

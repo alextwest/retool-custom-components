@@ -1,7 +1,0 @@
-{
-  "id": "editorjs",
-  "title": "Editor.js",
-  "author": "@minijohn",
-  "shortDescription": "A powerful rich text editor with block-style editing providing a modern WYSIWYG experience with clean JSON output, supporting headers, lists, code blocks, tables, and embeds.",
-  "tags": ["Rich Text", "Editors", "UI Components"]
-}

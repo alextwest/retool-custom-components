@@ -1,0 +1,221 @@
+{
+  "customComponentSupportVersion": "2",
+  "components": {
+    "FileTree": {
+      "name": "File Tree",
+      "model": [
+        {
+          "name": "treeData",
+          "initialValue": "{\"name\":\"project\",\"type\":\"folder\",\"children\":[{\"name\":\"src\",\"type\":\"folder\",\"children\":[{\"name\":\"index.tsx\",\"type\":\"file\",\"size\":4096,\"modified\":\"2024-03-01\",\"price\":12.5,\"status\":\"actif\"},{\"name\":\"App.tsx\",\"type\":\"file\",\"size\":2048,\"modified\":\"2024-02-20\",\"price\":8.0,\"status\":\"brouillon\"}]},{\"name\":\"README.md\",\"type\":\"file\",\"size\":512,\"modified\":\"2024-01-15\",\"price\":0,\"status\":\"publié\"},{\"name\":\"package.json\",\"type\":\"file\",\"size\":1024,\"modified\":\"2024-03-01\",\"price\":0,\"status\":\"actif\"}]}",
+          "type": "string"
+        },
+        {
+          "name": "columns",
+          "initialValue": "[{\"key\":\"size\",\"label\":\"Size\",\"type\":\"number\",\"format\":\"filesize\",\"align\":\"right\",\"width\":80},{\"key\":\"modified\",\"label\":\"Modified\",\"type\":\"date\",\"align\":\"center\",\"width\":100},{\"key\":\"price\",\"label\":\"Price\",\"type\":\"currency\",\"format\":\"EUR\",\"align\":\"right\",\"width\":90},{\"key\":\"status\",\"label\":\"Status\",\"type\":\"badge\",\"colors\":{\"actif\":\"#22c55e\",\"brouillon\":\"#f59e0b\",\"publié\":\"#3b82f6\"},\"width\":80}]",
+          "label": "Columns",
+          "description": "JSON array of column definitions. Each item: { key, label, type (text|number|date|boolean|badge|currency), format?, align? (left|center|right), width?, colors? }. Use the ⚙ editor (showEditors: true) for a visual editor.",
+          "type": "string"
+        },
+        {
+          "name": "iconConfig",
+          "initialValue": "{}",
+          "label": "Icon config",
+          "description": "JSON object mapping file extensions to icon names. Available icons: folder, folder-open, file, file-pdf, file-text, file-code, file-image, file-audio, file-video, file-archive, file-data, file-spreadsheet. Special keys: \"folder\", \"folder-open\", \"default\". Use the 🎨 editor (showEditors: true) for a visual editor.",
+          "type": "string"
+        },
+        {
+          "name": "selectedPath",
+          "initialValue": "",
+          "inspector": "hidden",
+          "label": "Selected path",
+          "description": "Tree path of the selected node (e.g. project/src/index.tsx).",
+          "type": "string"
+        },
+        {
+          "name": "selectedFileUrl",
+          "initialValue": "",
+          "inspector": "hidden",
+          "label": "Selected file URL",
+          "description": "The url property of the selected file node — physical path or link (NAS, Google Drive, Retool Files…). Set url on each file node in treeData.",
+          "type": "string"
+        },
+        {
+          "name": "selectedNode",
+          "initialValue": "{}",
+          "inspector": "hidden",
+          "label": "Selected node",
+          "description": "JSON du nœud sélectionné. Dans Retool : JSON.parse(filetree1.selectedNode).name",
+          "type": "string"
+        },
+        {
+          "name": "fontFamily",
+          "initialValue": "",
+          "inspector": "text",
+          "label": "Font (rows)",
+          "description": "Font family for row values. Leave empty to inherit the project font.",
+          "type": "string"
+        },
+        {
+          "name": "headerFontFamily",
+          "initialValue": "",
+          "inspector": "text",
+          "label": "Font (headers)",
+          "description": "Font family for column headers. Leave empty to inherit the project font.",
+          "type": "string"
+        },
+        {
+          "name": "bgColor",
+          "initialValue": "#ffffff",
+          "inspector": "text",
+          "label": "Background color",
+          "description": "Component background color (CSS value, e.g. #fff or transparent).",
+          "type": "string"
+        },
+        {
+          "name": "selectedBgColor",
+          "initialValue": "#dbeafe",
+          "inspector": "text",
+          "label": "Selected row color",
+          "description": "Background color of the selected row.",
+          "type": "string"
+        },
+        {
+          "name": "hoverBgColor",
+          "initialValue": "#f3f4f6",
+          "inspector": "text",
+          "label": "Hover row color",
+          "description": "Background color of the hovered row.",
+          "type": "string"
+        },
+        {
+          "name": "textColor",
+          "initialValue": "",
+          "inspector": "text",
+          "label": "Text color (rows)",
+          "description": "Row text color. Leave empty to auto-detect from background (dark text on light bg, light text on dark bg).",
+          "type": "string"
+        },
+        {
+          "name": "selectedTextColor",
+          "initialValue": "",
+          "inspector": "text",
+          "label": "Text color (selected)",
+          "description": "Text color for the selected row. Leave empty to auto-detect from selected row background.",
+          "type": "string"
+        },
+        {
+          "name": "hoverTextColor",
+          "initialValue": "",
+          "inspector": "text",
+          "label": "Text color (hover)",
+          "description": "Text color for hovered rows. Leave empty to auto-detect from hover background.",
+          "type": "string"
+        },
+        {
+          "name": "headerBgColor",
+          "initialValue": "#f9fafb",
+          "inspector": "text",
+          "label": "Header background",
+          "description": "Background color of the column header row.",
+          "type": "string"
+        },
+        {
+          "name": "headerTextColor",
+          "initialValue": "",
+          "inspector": "text",
+          "label": "Header text color",
+          "description": "Text color of column headers. Leave empty to auto-detect from header background.",
+          "type": "string"
+        },
+        {
+          "name": "nameColumnLabel",
+          "initialValue": "Name",
+          "inspector": "text",
+          "label": "Name column label",
+          "description": "Label for the first (name) column header.",
+          "type": "string"
+        },
+        {
+          "name": "showEditors",
+          "initialValue": false,
+          "inspector": "checkbox",
+          "label": "Show editors",
+          "description": "Enable the ⚙ Columns and 🎨 Icons visual editors directly on the component.",
+          "type": "boolean"
+        },
+        {
+          "name": "badgeBorderRadius",
+          "initialValue": 4,
+          "inspector": "text",
+          "label": "Badge border radius",
+          "description": "Border radius (px) for badge cells.",
+          "type": "number"
+        }
+      ],
+      "events": [
+        "fileSelect"
+      ],
+      "defaultHeight": 5,
+      "defaultWidth": 2
+    },
+    "CalendarWrapper": {
+      "name": "Calendar Wrapper",
+      "model": [
+        {
+          "name": "calendarEventData",
+          "type": "array"
+        },
+        {
+          "name": "crewsData",
+          "type": "array"
+        },
+        {
+          "name": "selectedWhiteboardEvent",
+          "initialValue": "",
+          "type": "string"
+        },
+        {
+          "name": "selectedRow",
+          "initialValue": "",
+          "type": "string"
+        },
+        {
+          "name": "selectedTimeZone",
+          "initialValue": "UTC",
+          "type": "string"
+        },
+        {
+          "name": "startField",
+          "initialValue": "start",
+          "type": "string"
+        },
+        {
+          "name": "endField",
+          "initialValue": "end",
+          "type": "string"
+        },
+        {
+          "name": "titleField",
+          "initialValue": "title",
+          "type": "string"
+        },
+        {
+          "name": "resourceField",
+          "initialValue": "resource_id",
+          "type": "string"
+        },
+        {
+          "name": "crewNameField",
+          "initialValue": "crew_name",
+          "type": "string"
+        }
+      ],
+      "events": [
+        "onWhiteboardEventClick",
+        "onWhiteboardCellSelect"
+      ],
+      "defaultHeight": 5,
+      "defaultWidth": 2
+    }
+  }
+}

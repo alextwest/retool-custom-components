@@ -1,1 +1,0 @@
-export { PasteToTable } from "./PasteToTable";

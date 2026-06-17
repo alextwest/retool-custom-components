@@ -1,1 +1,0 @@
-export { IndoorMap } from './components/indoorMap'

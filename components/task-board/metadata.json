@@ -1,7 +1,0 @@
-{
-  "id": "task-board",
-  "title": "TaskBoard",
-  "author": "@gonzalo",
-  "shortDescription": "A kanban-style project management board with drag-and-drop functionality, enabling visual task organization across Backlog, Todo, In Progress, and Done columns.",
-  "tags": ["Kanban", "Drag & Drop", "UI Components"]
-}

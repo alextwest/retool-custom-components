@@ -1,7 +1,0 @@
-{
-  "id": "custom-doc-viewer",
-  "title": "Custom Doc Viewer",
-  "author": "@vagkap",
-  "shortDescription": "A document viewer component for previewing .docx files in Retool applications with responsive scaling, base64 input, and built-in error handling.",
-  "tags": ["PDF", "File Upload", "UI Components"]
-}

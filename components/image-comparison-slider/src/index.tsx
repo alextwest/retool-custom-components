@@ -1,1 +1,0 @@
-export { ImageComparisonSlider } from './ImageComparisonSlider'

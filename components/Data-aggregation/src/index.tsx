@@ -1,1 +1,0 @@
-export { dataAggregation } from './components/dataAggregation'

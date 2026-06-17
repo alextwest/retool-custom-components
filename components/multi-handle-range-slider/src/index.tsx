@@ -1,1 +1,0 @@
-export { MultiHandleRangeSlider } from "./MultiHandleRangeSlider";
