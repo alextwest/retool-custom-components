@@ -229,41 +229,99 @@ const DEFAULT_ALIGN: Record<ColumnDef['type'], React.CSSProperties['textAlign']>
 
 function formatCell(value: unknown, col: ColumnDef): { text: string; badgeColor?: string } {
   if (value === null || value === undefined || value === '') return { text: '' }
+
   switch (col.type) {
-    case 'text': return { text: String(value) }
+    case 'text':
+      return { text: String(value) }
+
     case 'number': {
-      const n = Number(value); if (isNaN(n)) return { text: String(value) }
+      const n = Number(value)
+      if (isNaN(n)) return { text: String(value) }
+
       const fmt = col.format ?? 'decimal:0'
-      if (fmt === 'integer') return { text: n.toLocaleString('fr-FR', { maximumFractionDigits: 0 }) }
+
+      if (fmt === 'integer') {
+        return { text: n.toLocaleString('en-US', { maximumFractionDigits: 0 }) }
+      }
+
       if (fmt.startsWith('decimal:')) {
         const d = parseInt(fmt.split(':')[1] ?? '0')
-        return { text: n.toLocaleString('fr-FR', { minimumFractionDigits: d, maximumFractionDigits: d }) }
+        return {
+          text: n.toLocaleString('en-US', {
+            minimumFractionDigits: d,
+            maximumFractionDigits: d,
+          }),
+        }
       }
+
       if (fmt === 'percent' || fmt.startsWith('percent:')) {
         const d = fmt.includes(':') ? parseInt(fmt.split(':')[1]) : 1
-        return { text: (n * 100).toFixed(d) + ' %' }
+        return { text: (n * 100).toFixed(d) + '%' }
       }
+
       if (fmt === 'filesize') {
-        const units = ['o', 'Ko', 'Mo', 'Go', 'To']
-        let v = n, i = 0
-        while (v >= 1024 && i < units.length - 1) { v /= 1024; i++ }
+        const units = ['B', 'KB', 'MB', 'GB', 'TB']
+        let v = n
+        let i = 0
+
+        while (v >= 1024 && i < units.length - 1) {
+          v /= 1024
+          i++
+        }
+
         return { text: `${v.toFixed(i === 0 ? 0 : 1)} ${units[i]}` }
       }
-      return { text: n.toLocaleString('fr-FR') }
+
+      return { text: n.toLocaleString('en-US') }
     }
+
     case 'currency': {
-      const n = Number(value); if (isNaN(n)) return { text: String(value) }
-      return { text: new Intl.NumberFormat('fr-FR', { style: 'currency', currency: col.format ?? 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n) }
+      const n = Number(value)
+      if (isNaN(n)) return { text: String(value) }
+
+      return {
+        text: new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: col.format ?? 'USD',
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(n),
+      }
     }
+
     case 'date': {
       try {
-        const d = new Date(String(value)); if (isNaN(d.getTime())) return { text: String(value) }
-        return { text: col.format === 'datetime' ? d.toLocaleString('fr-FR') : d.toLocaleDateString('fr-FR') }
-      } catch { return { text: String(value) } }
+        const d = new Date(String(value))
+        if (isNaN(d.getTime())) return { text: String(value) }
+
+        return {
+          text:
+            col.format === 'datetime'
+              ? d.toLocaleString('en-US', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: true,
+                })
+              : d.toLocaleDateString('en-US'),
+        }
+      } catch {
+        return { text: String(value) }
+      }
     }
-    case 'boolean': return { text: value ? '✓' : '✗' }
-    case 'badge': { const text = String(value); return { text, badgeColor: col.colors?.[text] } }
-    default: return { text: String(value) }
+
+    case 'boolean':
+      return { text: value ? '✓' : '✗' }
+
+    case 'badge': {
+      const text = String(value)
+      return { text, badgeColor: col.colors?.[text] }
+    }
+
+    default:
+      return { text: String(value) }
   }
 }
 
@@ -562,7 +620,7 @@ export const FileTree: FC = () => {
     name: 'columns',
     label: 'Columns',
     description: 'JSON array of column definitions. Each item: { key, label, type (text|number|date|boolean|badge|currency), format?, align? (left|center|right), width?, colors? }. Use the ⚙ editor (showEditors: true) for a visual editor.',
-    initialValue: '[{"key":"size","label":"Taille","type":"number","format":"filesize","align":"right","width":80},{"key":"modified","label":"Modifié","type":"date","align":"center","width":100},{"key":"price","label":"Prix","type":"currency","format":"EUR","align":"right","width":90},{"key":"status","label":"Statut","type":"badge","colors":{"actif":"#22c55e","brouillon":"#f59e0b","publié":"#3b82f6"},"width":80}]',
+    initialValue: '[{"key":"size","label":"Size","type":"number","format":"filesize","align":"right","width":80},{"key":"modified","label":"Modified","type":"date","align":"center","width":100},{"key":"price","label":"Price","type":"currency","format":"EUR","align":"right","width":90},{"key":"status","label":"Status","type":"badge","colors":{"actif":"#22c55e","brouillon":"#f59e0b","publié":"#3b82f6"},"width":80}]',
   })
 
   const [iconConfigRaw, setIconConfigRaw] = Retool.useStateString({
@@ -696,7 +754,7 @@ export const FileTree: FC = () => {
     name: 'nameColumnLabel',
     label: 'Name column label',
     description: 'Label for the first (name) column header.',
-    initialValue: 'Nom',
+    initialValue: 'Name',
     inspector: 'text',
   })
 
@@ -793,7 +851,7 @@ export const FileTree: FC = () => {
   const resolvedSelectedTextColor = selectedTextColor || getContrastColor(resolvedSelectedBg)
   const resolvedHoverTextColor    = hoverTextColor    || getContrastColor(resolvedHoverBg)
   const resolvedHeaderTextColor   = headerTextColor   || getContrastColor(resolvedHeaderBg)
-  const resolvedNameLabel         = nameColumnLabel   || 'Nom'
+  const resolvedNameLabel         = nameColumnLabel   || 'Name'
 
   // Inject scoped styles with !important so they beat any Retool iframe CSS reset
   useEffect(() => {

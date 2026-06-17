@@ -36,9 +36,9 @@
     "prettier": "^3.0.3"
   },
   "retoolCustomComponentLibraryConfig": {
-    "name": "ReactCalendar",
-    "label": "React Calendar",
-    "description": "React calendar just like full calendar library.",
+    "name": "ParadigmCustomComponents",
+    "label": "Paradigm Custom Components",
+    "description": "A library for all custom components built for Retool apps.",
     "entryPoint": "src/index.tsx",
     "outputPath": "dist"
   }

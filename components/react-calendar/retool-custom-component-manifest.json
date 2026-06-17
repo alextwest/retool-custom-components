@@ -1,0 +1,64 @@
+{
+  "customComponentSupportVersion": "2",
+  "components": {
+    "CalendarWrapper": {
+      "name": "Calendar Wrapper",
+      "model": [
+        {
+          "name": "calendarEventData",
+          "type": "array"
+        },
+        {
+          "name": "crewsData",
+          "type": "array"
+        },
+        {
+          "name": "selectedWhiteboardEvent",
+          "initialValue": "",
+          "type": "string"
+        },
+        {
+          "name": "selectedRow",
+          "initialValue": "",
+          "type": "string"
+        },
+        {
+          "name": "selectedTimeZone",
+          "initialValue": "UTC",
+          "type": "string"
+        },
+        {
+          "name": "startField",
+          "initialValue": "start",
+          "type": "string"
+        },
+        {
+          "name": "endField",
+          "initialValue": "end",
+          "type": "string"
+        },
+        {
+          "name": "titleField",
+          "initialValue": "title",
+          "type": "string"
+        },
+        {
+          "name": "resourceField",
+          "initialValue": "resource_id",
+          "type": "string"
+        },
+        {
+          "name": "crewNameField",
+          "initialValue": "crew_name",
+          "type": "string"
+        }
+      ],
+      "events": [
+        "onWhiteboardEventClick",
+        "onWhiteboardCellSelect"
+      ],
+      "defaultHeight": 5,
+      "defaultWidth": 2
+    }
+  }
+}
