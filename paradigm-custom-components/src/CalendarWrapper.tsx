@@ -20,9 +20,44 @@ const getCrewColor = (key: string) => {
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 };
 
+const getEventStyleForConfidence = (
+  event: CalendarEvent,
+  scheduleConfidenceField: string,
+  color: string
+): React.CSSProperties => {
+  const confidence = String(event?.[scheduleConfidenceField] ?? "").trim().toLowerCase();
+
+  if (confidence === "tentative") {
+    return {
+      background: "transparent",
+      color,
+      border: `2px dashed ${color}`
+    };
+  }
+
+  return {
+    background: color,
+    color: "#000",
+    border: `1px solid ${color}`
+  };
+};
+
 export const CalendarWrapper: React.FC = () => {
-  const [calendarEventData] = Retool.useStateArray<CalendarEvent>({ name: "calendarEventData" });
-  const [crewsData] = Retool.useStateArray<Crew>({ name: "crewsData" });
+  const [calendarEventDataRaw] = Retool.useStateArray({
+      name: "calendarEventData",
+      initialValue: []
+    });
+  
+  const calendarEventData =
+    calendarEventDataRaw as unknown as CalendarEvent[];
+  
+  const [crewsDataRaw] = Retool.useStateArray({
+    name: "crewsData",
+    initialValue: []
+  });
+  
+  const crewsData =
+    crewsDataRaw as unknown as Crew[];
 
   const [, setSelectedEventString] = Retool.useStateString({ name: "selectedWhiteboardEvent", initialValue: "" });
   const [, setSelectedRowString] = Retool.useStateString({ name: "selectedRow", initialValue: "" });
@@ -34,13 +69,16 @@ export const CalendarWrapper: React.FC = () => {
   const [titleField] = Retool.useStateString({ name: "titleField", initialValue: "title" });
   const [resourceField] = Retool.useStateString({ name: "resourceField", initialValue: "resource_id" });
   const [crewNameField] = Retool.useStateString({ name: "crewNameField", initialValue: "crew_name" });
+  const [scheduleConfidenceField] = Retool.useStateString({ name: "scheduleConfidence", initialValue: "scheduleConfidence" });
 
   const TZ = selectedTimeZone || "UTC";
 
   const onWhiteboardEventClick = Retool.useEventCallback({ name: "onWhiteboardEventClick" });
   const onWhiteboardCellSelect = Retool.useEventCallback({ name: "onWhiteboardCellSelect" });
 
-  const [monthOffset, setMonthOffset] = useState(0);
+  const [currentDate, setCurrentDate] = useState(() =>
+    moment().tz(TZ)
+  );
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -53,7 +91,7 @@ export const CalendarWrapper: React.FC = () => {
     const observer = new ResizeObserver(resize);
     if (wrapperRef.current) observer.observe(wrapperRef.current);
     return () => observer.disconnect();
-  }, [calendarEventData, crewsData, monthOffset]);
+  }, [calendarEventData, crewsData, currentDate]);
 
   return (
     <div ref={wrapperRef} style={{ padding: 12, background: "#f8f9fb" }}>
@@ -61,8 +99,8 @@ export const CalendarWrapper: React.FC = () => {
         events={calendarEventData}
         crews={crewsData}
         TZ={TZ}
-        monthOffset={monthOffset}
-        setMonthOffset={setMonthOffset}
+        currentDate={currentDate}
+        setCurrentDate={setCurrentDate}
         setSelectedRowString={setSelectedRowString}
         setSelectedEventString={setSelectedEventString}
         onEventClick={onWhiteboardEventClick}
@@ -72,6 +110,7 @@ export const CalendarWrapper: React.FC = () => {
         titleField={titleField}
         resourceField={resourceField}
         crewNameField={crewNameField}
+        scheduleConfidenceField={scheduleConfidenceField}
       />
     </div>
   );
@@ -81,8 +120,8 @@ const WhiteboardView = ({
   events,
   crews,
   TZ,
-  monthOffset,
-  setMonthOffset,
+  currentDate,
+  setCurrentDate,
   setSelectedEventString,
   onEventClick,
   onCellSelect,
@@ -90,7 +129,8 @@ const WhiteboardView = ({
   endField,
   titleField,
   resourceField,
-  crewNameField
+  crewNameField,
+  scheduleConfidenceField
 }: any) => {
 
   const [viewMode, setViewMode] = useState("week");
@@ -125,11 +165,8 @@ const WhiteboardView = ({
   };
 
   const baseDate = useMemo(() => {
-    return moment().tz(TZ).add(
-      monthOffset,
-      viewMode === "month" ? "months" : "weeks"
-    );
-  }, [monthOffset, viewMode, TZ]);
+    return moment(currentDate).tz(TZ);
+  }, [currentDate, TZ]);
 
   const weekCount =
     viewMode === "week" ? 1 :
@@ -182,7 +219,16 @@ const WhiteboardView = ({
         <div style={segmentedContainer}>
           <button
             style={segBtn}
-            onClick={() => setMonthOffset(p => p - 1)}
+            onClick={() => {
+              setCurrentDate((previous: moment.Moment) =>
+                previous.clone().subtract(
+                  1,
+                  viewMode === "month" || viewMode === "list"
+                    ? "month"
+                    : "week"
+                )
+              );
+            }}
           >
             ‹
           </button>
@@ -193,14 +239,23 @@ const WhiteboardView = ({
               fontWeight: 600,
               padding: "6px 18px"
             }}
-            onClick={() => setMonthOffset(0)}
+            onClick={() => setCurrentDate(moment().tz(TZ))}
           >
             Today
           </button>
 
           <button
             style={segBtn}
-            onClick={() => setMonthOffset(p => p + 1)}
+            onClick={() => {
+              setCurrentDate((previous: moment.Moment) =>
+                previous.clone().add(
+                  1,
+                  viewMode === "month" || viewMode === "list"
+                    ? "month"
+                    : "week"
+                )
+              );
+            }}
           >
             ›
           </button>
@@ -317,6 +372,7 @@ const WhiteboardView = ({
                       ev.color ||
                       colorMap[ev[resourceField]] ||
                       "#2563eb";
+                    const eventStyle = getEventStyleForConfidence(ev, scheduleConfidenceField, color);
 
                     return (
                       <div
@@ -347,7 +403,16 @@ const WhiteboardView = ({
                         </div>
 
                         <div style={{ fontWeight: 700 }}>
-                          {String(ev[titleField] ?? "Untitled")}
+                          <span
+                            style={{
+                              display: "inline-block",
+                              borderRadius: 6,
+                              padding: "2px 8px",
+                              ...eventStyle
+                            }}
+                          >
+                            {String(ev[titleField] ?? "Untitled")}
+                          </span>
                         </div>
                       </div>
                     );
@@ -529,8 +594,11 @@ const WhiteboardView = ({
                             colorMap[crew.id] ||
                             colorMap[crew.name] ||
                             "#2563eb";
-                          const dayWidth = 100 / 7;
-                          const gap = 2;
+                          const eventStyle = getEventStyleForConfidence(
+                            e.ev,
+                            scheduleConfidenceField,
+                            color
+                          );
 
                           return (
                             <div
@@ -547,8 +615,7 @@ const WhiteboardView = ({
                                 left: `calc(${e.startIdx * (100 / 7)}% + 2px)`,
                                 width: `calc(${e.span * (100 / 7)}% - 4px)`,
                                 height: 22,
-                                background: color,
-                                color: "#000",
+                                ...eventStyle,
                                 borderRadius: 6,
                                 padding: "2px 8px",
                                 fontSize: 11,
@@ -579,7 +646,7 @@ const WhiteboardView = ({
   );
 };
 
-const btnLight = {
+const btnLight: React.CSSProperties = {
   background: "#fff",
   border: "1px solid #d1d5db",
   padding: "6px 10px",
@@ -588,14 +655,14 @@ const btnLight = {
   cursor: "pointer"
 };
 
-const btnActive = {
+const btnActive: React.CSSProperties = {
   ...btnLight,
   background: "#2563eb",
   color: "#fff",
   border: "1px solid #2563eb"
 };
 
-const headerCell = {
+const headerCell: React.CSSProperties = {
   padding: 10,
   borderBottom: "1px solid #eee",
   textAlign: "center",
@@ -603,14 +670,14 @@ const headerCell = {
   fontWeight: 600
 };
 
-const crewCell = {
+const crewCell: React.CSSProperties = {
   padding: 10,
   borderTop: "1px solid #eee",
   fontSize: 13,
   fontWeight: 500
 };
 
-const segmentedContainer = {
+const segmentedContainer: React.CSSProperties = {
   display: "flex",
   background: "#FFFFFF",
   padding: 4,
@@ -619,7 +686,7 @@ const segmentedContainer = {
   gap: 4
 };
 
-const segBtn = {
+const segBtn: React.CSSProperties = {
   border: "none",
   background: "transparent",
   padding: "6px 12px",
@@ -630,7 +697,7 @@ const segBtn = {
   transition: "all 0.2s ease"
 };
 
-const activeSegBtn = {
+const activeSegBtn: React.CSSProperties = {
   ...segBtn,
   background: "#2563eb",
   color: "#fff",

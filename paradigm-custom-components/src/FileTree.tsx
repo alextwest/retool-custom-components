@@ -963,9 +963,31 @@ export const FileTree: FC = () => {
                   <span style={{ width: ICON_W, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <IconComp size={15} />
                   </span>
+
                   <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: textCol }}>
                     {(node.alias as string) ?? node.name}
                   </span>
+
+                  {node.url && (
+                    <button
+                      title="Open in SharePoint"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(String(node.url), "_blank", "noopener,noreferrer");
+                      }}
+                      style={{
+                        border: "none",
+                        background: "transparent",
+                        cursor: "pointer",
+                        padding: "0 4px",
+                        fontSize: 12,
+                        lineHeight: 1
+                      }}
+                    >
+                      ↗
+                    </button>
+                  )}
+
                 </div>
 
                 {columns.map(col => {

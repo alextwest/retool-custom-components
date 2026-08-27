@@ -163,10 +163,12 @@
       "model": [
         {
           "name": "calendarEventData",
+          "initialValue": [],
           "type": "array"
         },
         {
           "name": "crewsData",
+          "initialValue": [],
           "type": "array"
         },
         {
@@ -208,12 +210,59 @@
           "name": "crewNameField",
           "initialValue": "crew_name",
           "type": "string"
+        },
+        {
+          "name": "scheduleConfidence",
+          "initialValue": "scheduleConfidence",
+          "type": "string"
         }
       ],
       "events": [
         "onWhiteboardEventClick",
         "onWhiteboardCellSelect"
       ],
+      "defaultHeight": 5,
+      "defaultWidth": 2
+    },
+    "AddressAutoComplete": {
+      "name": "Address Auto Complete",
+      "model": [
+        {
+          "name": "apiKey",
+          "type": "string"
+        },
+        {
+          "name": "placeholder",
+          "initialValue": "Search address...",
+          "type": "string"
+        },
+        {
+          "name": "selectedAddress",
+          "initialValue": "{}",
+          "type": "string"
+        },
+        {
+          "name": "label",
+          "initialValue": "Site Address",
+          "type": "string"
+        },
+        {
+          "name": "value",
+          "initialValue": "",
+          "type": "string"
+        },
+        {
+          "name": "formDataKey",
+          "initialValue": "site_address",
+          "type": "string"
+        },
+        {
+          "name": "required",
+          "initialValue": true,
+          "type": "boolean"
+        }
+      ],
+      "events": [],
       "defaultHeight": 5,
       "defaultWidth": 2
     }
