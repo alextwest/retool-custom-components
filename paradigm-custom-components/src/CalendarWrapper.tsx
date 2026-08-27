@@ -20,12 +20,17 @@ const getCrewColor = (key: string) => {
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 };
 
+const getScheduleConfidence = (
+  event: CalendarEvent,
+  scheduleConfidenceField: string
+) => String(event?.[scheduleConfidenceField] ?? "confirmed").trim().toLowerCase();
+
 const getEventStyleForConfidence = (
   event: CalendarEvent,
   scheduleConfidenceField: string,
   color: string
 ): React.CSSProperties => {
-  const confidence = String(event?.[scheduleConfidenceField] ?? "").trim().toLowerCase();
+  const confidence = getScheduleConfidence(event, scheduleConfidenceField);
 
   if (confidence === "tentative") {
     return {
@@ -40,6 +45,18 @@ const getEventStyleForConfidence = (
     color: "#000",
     border: `1px solid ${color}`
   };
+};
+
+const getEventTooltip = (
+  event: CalendarEvent,
+  titleField: string,
+  scheduleConfidenceField: string
+) => {
+  const title = String(event?.[titleField] ?? "Untitled");
+  const confidence = getScheduleConfidence(event, scheduleConfidenceField);
+  const status = confidence === "tentative" ? "Tentative schedule" : "Confirmed schedule";
+
+  return `${title}\n${status}`;
 };
 
 export const CalendarWrapper: React.FC = () => {
@@ -373,6 +390,7 @@ const WhiteboardView = ({
                       colorMap[ev[resourceField]] ||
                       "#2563eb";
                     const eventStyle = getEventStyleForConfidence(ev, scheduleConfidenceField, color);
+                    const eventTooltip = getEventTooltip(ev, titleField, scheduleConfidenceField);
 
                     return (
                       <div
@@ -404,6 +422,7 @@ const WhiteboardView = ({
 
                         <div style={{ fontWeight: 700 }}>
                           <span
+                            title={eventTooltip}
                             style={{
                               display: "inline-block",
                               borderRadius: 6,
@@ -599,10 +618,16 @@ const WhiteboardView = ({
                             scheduleConfidenceField,
                             color
                           );
+                          const eventTooltip = getEventTooltip(
+                            e.ev,
+                            titleField,
+                            scheduleConfidenceField
+                          );
 
                           return (
                             <div
                               key={i}
+                              title={eventTooltip}
                               onClick={(ev) => {
                                 ev.stopPropagation();
                                 setSelectedEventString(e.ev);
