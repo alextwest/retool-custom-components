@@ -30,7 +30,7 @@ const getEventStyleForConfidence = (
   if (confidence === "tentative") {
     return {
       background: "transparent",
-      color,
+      color: "#000",
       border: `2px dashed ${color}`
     };
   }
