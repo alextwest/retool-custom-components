@@ -68,6 +68,13 @@
   outline: 2px solid var(--app-primary);
   outline-offset: 1px;
 }
+.kv-editor input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  margin: 9px 0;
+  accent-color: var(--app-primary);
+}
 .kv-editor .kv-search {
   margin: 20px 0 0;
   background: var(--app-secondary);
@@ -97,7 +104,10 @@
   font-weight: 400;
 }
 .kv-field.kv-dirty > span {
-  color: var(--app-primary);
+  color: #009fe3;
+}
+.kv-dirty-color {
+  color: #009fe3;
 }
 .kv-editor input:disabled,
 .kv-editor select:disabled,
@@ -121,6 +131,34 @@
   border-radius: 7px;
   margin-top: 14px;
   overflow-wrap: anywhere;
+}
+.kv-pair-warning {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border-left: 3px solid var(--app-warning, #b7791f);
+  background: var(--app-secondary);
+  color: var(--app-text);
+  font-size: 12px;
+}
+.kv-clearable-input {
+  position: relative;
+  padding-right: 30px;
+}
+.kv-editor button.kv-input-clear {
+  position: absolute;
+  right: 0;
+  top: 7px;
+  padding: 0;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+}
+.kv-input-clear:focus-visible {
+  outline: 2px solid var(--app-primary);
+  outline-offset: 1px;
 }
 
 .kv-currency {
@@ -151,4 +189,68 @@
   outline: 2px solid var(--app-primary);
   outline-offset: 2px;
   border-radius: 7px;
+}
+
+.kv-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.kv-status-control {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.kv-status-clearable select {
+  padding-right: 58px;
+}
+.kv-editor button.kv-status-clear {
+  position: absolute;
+  right: 26px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+}
+.kv-status-info {
+  position: relative;
+}
+.kv-status-info button {
+  padding: 5px;
+  border: 0;
+  background: transparent;
+}
+.kv-status-hint {
+  position: absolute;
+  right: 0;
+  bottom: 100%;
+  z-index: 2;
+  width: 240px;
+  max-width: 70vw;
+  padding: 10px;
+  border: 1px solid var(--app-border);
+  border-radius: 7px;
+  background: var(--app-surface);
+  color: var(--app-text);
+  font-size: 12px;
+}
+.kv-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.kv-status button:focus-visible {
+  outline: 2px solid var(--app-primary);
+  outline-offset: 1px;
 }

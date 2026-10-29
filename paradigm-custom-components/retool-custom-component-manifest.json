@@ -315,13 +315,19 @@
         {
           "name": "fields",
           "initialValue": {},
-          "description": "Field configuration keyed by data key: label, type, options, group, hidden, readOnly, required.",
+          "description": "Field configuration keyed by data key: label, type, options, group, hidden, readOnly, required, pairedField.",
+          "type": "object"
+        },
+        {
+          "name": "statusClearRules",
+          "initialValue": {},
+          "description": "Optional status clearing overrides: {canClear: boolean, reason?: string}. All five statuses allow clearing when related dates and amounts are cleared; zero amounts do not block clearing.",
           "type": "object"
         },
         {
           "name": "saveResult",
           "initialValue": {},
-          "description": "Bind to temporary state. Handler sets {requestId, success, error}.",
+          "description": "Bind to temporary state. Handler sets {requestId, success, error}. A matching success acknowledgment marks the submitted changes saved.",
           "type": "object"
         },
         {
@@ -371,7 +377,14 @@
         },
         {
           "name": "debounceMs",
-          "initialValue": 900,
+          "initialValue": 1000,
+          "description": "Autosave delay in milliseconds for dropdown changes.",
+          "type": "number"
+        },
+        {
+          "name": "typingDebounceMs",
+          "initialValue": 2500,
+          "description": "Autosave delay in milliseconds after leaving a text, number, date, or JSON field. Autosave pauses while editing these fields.",
           "type": "number"
         }
       ],
