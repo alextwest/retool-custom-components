@@ -1,0 +1,154 @@
+.kv-editor {
+  box-sizing: border-box;
+  /* Keep content in normal flow so Retool Auto height can measure it. */
+  height: auto;
+  overflow: visible;
+  background: var(--app-surface);
+  padding: 20px;
+  font-size: 13px;
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+}
+.kv-editor * {
+  box-sizing: border-box;
+}
+.kv-editor header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.kv-editor h2 {
+  font-size: 18px;
+  margin: 0 0 6px;
+  font-weight: 650;
+}
+.kv-muted {
+  color: var(--app-muted);
+  font-size: 12px;
+}
+.kv-actions {
+  display: flex;
+  gap: 8px;
+}
+.kv-editor button {
+  cursor: pointer;
+  border: 1px solid var(--app-border);
+  border-radius: 7px;
+  padding: 9px 12px;
+  background: var(--app-surface);
+  color: var(--app-text);
+  font: inherit;
+}
+.kv-editor button.kv-save {
+  background: var(--app-primary);
+  color: var(--app-on-primary);
+  border-color: var(--app-primary);
+}
+.kv-editor button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.kv-editor input,
+.kv-editor select,
+.kv-editor textarea {
+  font: inherit;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--app-border);
+  border-radius: 7px;
+  color: var(--app-text);
+  background: var(--app-surface);
+  min-width: 0;
+}
+.kv-editor input:focus,
+.kv-editor select:focus,
+.kv-editor textarea:focus {
+  outline: 2px solid var(--app-primary);
+  outline-offset: 1px;
+}
+.kv-editor .kv-search {
+  margin: 20px 0 0;
+  background: var(--app-secondary);
+}
+.kv-editor h3 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--app-muted);
+  margin: 24px 0 14px;
+}
+.kv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 18px 22px;
+}
+.kv-field > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 7px;
+  font-weight: 550;
+}
+.kv-field small {
+  font-size: 10px;
+  color: var(--app-muted);
+  font-weight: 400;
+}
+.kv-field.kv-dirty > span {
+  color: var(--app-primary);
+}
+.kv-editor input:disabled,
+.kv-editor select:disabled,
+.kv-editor textarea:disabled {
+  background: var(--app-secondary);
+  opacity: 1;
+  color: var(--app-muted);
+}
+.kv-field textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+.kv-editor .kv-error {
+  display: block;
+  margin-top: 6px;
+  color: var(--app-danger);
+}
+.kv-message {
+  padding: 10px 12px;
+  background: var(--app-secondary);
+  border-radius: 7px;
+  margin-top: 14px;
+  overflow-wrap: anywhere;
+}
+
+.kv-currency {
+  position: relative;
+}
+.kv-currency-prefix {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--app-muted);
+  pointer-events: none;
+}
+.kv-editor .kv-currency input {
+  padding-left: 26px;
+}
+
+.kv-link {
+  display: block;
+  padding: 9px 10px;
+  overflow-wrap: anywhere;
+}
+.kv-editor a.kv-link {
+  color: var(--app-primary);
+  text-decoration: underline;
+}
+.kv-editor a.kv-link:focus-visible {
+  outline: 2px solid var(--app-primary);
+  outline-offset: 2px;
+  border-radius: 7px;
+}

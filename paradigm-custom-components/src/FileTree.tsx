@@ -1,3 +1,4 @@
+import { useAppTheme } from "./theme";
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { type FC } from 'react'
 import { Retool } from '@tryretool/custom-component-support'
@@ -369,21 +370,21 @@ const JsonCopyField: FC<{ value: string; label: string }> = ({ value, label }) =
     })
   }
   return (
-    <div style={{ marginTop: 10, borderTop: '1px solid #e5e7eb', paddingTop: 10 }}>
+    <div style={{ marginTop: 10, borderTop: '1px solid var(--app-border, #e5e7eb)', paddingTop: 10 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-        <span style={{ fontSize: 10, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+        <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--app-muted, #9ca3af)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           JSON à coller dans « {label} »
         </span>
         <button
           onClick={copy}
-          style={{ padding: '2px 8px', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer', fontSize: 11, fontFamily: 'inherit', backgroundColor: copied ? '#dcfce7' : '#fff', color: copied ? '#16a34a' : '#374151' }}>
+          style={{ padding: '2px 8px', border: '1px solid var(--app-border, #d1d5db)', borderRadius: 4, cursor: 'pointer', fontSize: 11, fontFamily: 'inherit', backgroundColor: copied ? 'var(--app-success-bg, #dcfce7)' : 'var(--app-surface, #fff)', color: copied ? 'var(--app-success, #16a34a)' : 'var(--app-text, #374151)' }}>
           {copied ? '✓ Copié' : 'Copier'}
         </button>
       </div>
       <textarea
         readOnly
         value={value}
-        style={{ width: '100%', height: 56, padding: '4px 6px', border: '1px solid #e5e7eb', borderRadius: 4, fontSize: 11, fontFamily: 'monospace', backgroundColor: '#f9fafb', color: '#374151', resize: 'none', boxSizing: 'border-box', outline: 'none' }}
+        style={{ width: '100%', height: 56, padding: '4px 6px', border: '1px solid var(--app-border, #e5e7eb)', borderRadius: 4, fontSize: 11, fontFamily: 'monospace', backgroundColor: 'var(--app-secondary, #f9fafb)', color: 'var(--app-text, #374151)', resize: 'none', boxSizing: 'border-box', outline: 'none' }}
         onClick={e => (e.target as HTMLTextAreaElement).select()}
       />
     </div>
@@ -402,26 +403,26 @@ const ColumnEditor: FC<{
     commit(cols.map((c, idx) => idx === i ? { ...c, ...patch } : c))
 
   const s = {
-    panel: { position: 'absolute', inset: 0, zIndex: 20, backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: 6, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'Inter, system-ui, sans-serif', fontSize: 13 } as React.CSSProperties,
-    head:  { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 12px', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb', flexShrink: 0 } as React.CSSProperties,
+    panel: { position: 'absolute', inset: 0, zIndex: 20, backgroundColor: 'var(--app-surface, #fff)', border: '1px solid var(--app-border, #e5e7eb)', borderRadius: 6, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'Inter, system-ui, sans-serif', fontSize: 13 } as React.CSSProperties,
+    head:  { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 12px', borderBottom: '1px solid var(--app-border, #e5e7eb)', backgroundColor: 'var(--app-secondary, #f9fafb)', flexShrink: 0 } as React.CSSProperties,
     body:  { flex: 1, overflowY: 'auto', padding: '10px 12px' } as React.CSSProperties,
-    foot:  { padding: '8px 12px', borderTop: '1px solid #e5e7eb', flexShrink: 0 } as React.CSSProperties,
-    input: { width: '100%', padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: 4, fontSize: 12, boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none' } as React.CSSProperties,
-    select:{ width: '100%', padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: 4, fontSize: 12, boxSizing: 'border-box', fontFamily: 'inherit', cursor: 'pointer', backgroundColor: '#fff' } as React.CSSProperties,
-    btn:   { padding: '4px 10px', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer', fontSize: 12, backgroundColor: '#fff', fontFamily: 'inherit' } as React.CSSProperties,
+    foot:  { padding: '8px 12px', borderTop: '1px solid var(--app-border, #e5e7eb)', flexShrink: 0 } as React.CSSProperties,
+    input: { width: '100%', padding: '4px 6px', border: '1px solid var(--app-border, #d1d5db)', borderRadius: 4, fontSize: 12, boxSizing: 'border-box', fontFamily: 'inherit', outline: 'none' } as React.CSSProperties,
+    select:{ width: '100%', padding: '4px 6px', border: '1px solid var(--app-border, #d1d5db)', borderRadius: 4, fontSize: 12, boxSizing: 'border-box', fontFamily: 'inherit', cursor: 'pointer', backgroundColor: 'var(--app-surface, #fff)' } as React.CSSProperties,
+    btn:   { padding: '4px 10px', border: '1px solid var(--app-border, #d1d5db)', borderRadius: 4, cursor: 'pointer', fontSize: 12, backgroundColor: 'var(--app-surface, #fff)', fontFamily: 'inherit' } as React.CSSProperties,
   }
 
   return (
     <div style={s.panel}>
       <div style={s.head}>
-        <span style={{ fontWeight: 600, color: '#111827' }}>⚙ Colonnes</span>
+        <span style={{ fontWeight: 600, color: 'var(--app-text, #111827)' }}>⚙ Colonnes</span>
         <button style={s.btn} onClick={onClose}>Fermer</button>
       </div>
 
       <div style={s.body}>
         {/* Column header labels */}
         {cols.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px 1fr 68px 52px 24px', gap: 6, marginBottom: 4, fontSize: 10, fontWeight: 600, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', alignItems: 'center' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px 1fr 68px 52px 24px', gap: 6, marginBottom: 4, fontSize: 10, fontWeight: 600, color: 'var(--app-muted, #9ca3af)', textTransform: 'uppercase', letterSpacing: '0.05em', alignItems: 'center' }}>
             <span>Clé</span><span>Label</span><span>Type</span>
             <span>Format</span><span>Align.</span><span>Larg.</span><span />
           </div>
@@ -442,16 +443,16 @@ const ColumnEditor: FC<{
                 {COL_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
               {/* format */}
-              <input style={{ ...s.input, color: FORMAT_HINT[col.type] ? '#111827' : '#d1d5db' }}
+              <input style={{ ...s.input, color: FORMAT_HINT[col.type] ? 'var(--app-text, #111827)' : 'var(--app-border, #d1d5db)' }}
                 value={col.format ?? ''}
                 placeholder={FORMAT_HINT[col.type] ?? '—'}
                 disabled={!FORMAT_HINT[col.type]}
                 onChange={e => upd(i, { format: e.target.value || undefined })} />
               {/* align — G C D buttons */}
-              <div style={{ display: 'flex', border: '1px solid #d1d5db', borderRadius: 4, overflow: 'hidden' }}>
+              <div style={{ display: 'flex', border: '1px solid var(--app-border, #d1d5db)', borderRadius: 4, overflow: 'hidden' }}>
                 {(['left', 'center', 'right'] as const).map((a, ai) => (
                   <button key={a}
-                    style={{ flex: 1, border: 'none', borderLeft: ai > 0 ? '1px solid #d1d5db' : 'none', cursor: 'pointer', padding: '4px 2px', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', backgroundColor: col.align === a ? '#dbeafe' : '#fff', color: col.align === a ? '#1d4ed8' : '#6b7280' }}
+                    style={{ flex: 1, border: 'none', borderLeft: ai > 0 ? '1px solid var(--app-border, #d1d5db)' : 'none', cursor: 'pointer', padding: '4px 2px', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', backgroundColor: col.align === a ? 'var(--app-selected, #dbeafe)' : 'var(--app-surface, #fff)', color: col.align === a ? 'var(--app-primary, #1d4ed8)' : 'var(--app-muted, #6b7280)' }}
                     title={a}
                     onClick={() => upd(i, { align: a })}>
                     {a === 'left' ? 'G' : a === 'center' ? 'C' : 'D'}
@@ -463,14 +464,14 @@ const ColumnEditor: FC<{
                 value={col.width ?? 100}
                 onChange={e => upd(i, { width: Math.max(40, parseInt(e.target.value) || 100) })} />
               {/* delete */}
-              <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#9ca3af', fontSize: 14, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--app-muted, #9ca3af)', fontSize: 14, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 onClick={() => commit(cols.filter((_, j) => j !== i))}>✕</button>
             </div>
 
             {/* Badge colors row */}
             {col.type === 'badge' && (
               <div style={{ marginBottom: 10, marginLeft: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 11, color: '#6b7280', flexShrink: 0 }}>Couleurs badge :</span>
+                <span style={{ fontSize: 11, color: 'var(--app-muted, #6b7280)', flexShrink: 0 }}>Couleurs badge :</span>
                 <input style={{ ...s.input, fontFamily: 'monospace', fontSize: 11 }}
                   value={col.colors ? JSON.stringify(col.colors) : ''}
                   placeholder='{"actif":"#22c55e","inactif":"#ef4444"}'
@@ -484,14 +485,14 @@ const ColumnEditor: FC<{
         ))}
 
         {cols.length === 0 && (
-          <p style={{ color: '#9ca3af', fontSize: 12, textAlign: 'center', marginTop: 24 }}>
+          <p style={{ color: 'var(--app-muted, #9ca3af)', fontSize: 12, textAlign: 'center', marginTop: 24 }}>
             Aucune colonne — cliquez « + Ajouter » pour commencer.
           </p>
         )}
       </div>
 
       <div style={s.foot}>
-        <button style={{ ...s.btn, color: '#2563eb', borderColor: '#bfdbfe' }}
+        <button style={{ ...s.btn, color: 'var(--app-primary, #2563eb)', borderColor: 'var(--app-selected, #bfdbfe)' }}
           onClick={() => commit([...cols, { key: '', label: 'Nouvelle colonne', type: 'text', width: 100 }])}>
           + Ajouter une colonne
         </button>
@@ -532,19 +533,19 @@ const IconConfigEditor: FC<{
   const add = () => setMappings(prev => [...prev, { id: String(Date.now()), ext: '', icon: 'file' }])
 
   const s = {
-    panel: { position: 'absolute', inset: 0, zIndex: 20, backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: 6, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'Inter, system-ui, sans-serif', fontSize: 13 } as React.CSSProperties,
-    head:  { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 12px', borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb', flexShrink: 0 } as React.CSSProperties,
+    panel: { position: 'absolute', inset: 0, zIndex: 20, backgroundColor: 'var(--app-surface, #fff)', border: '1px solid var(--app-border, #e5e7eb)', borderRadius: 6, display: 'flex', flexDirection: 'column', overflow: 'hidden', fontFamily: 'Inter, system-ui, sans-serif', fontSize: 13 } as React.CSSProperties,
+    head:  { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 12px', borderBottom: '1px solid var(--app-border, #e5e7eb)', backgroundColor: 'var(--app-secondary, #f9fafb)', flexShrink: 0 } as React.CSSProperties,
     body:  { flex: 1, overflowY: 'auto', padding: '12px' } as React.CSSProperties,
-    btn:   { padding: '4px 10px', border: '1px solid #d1d5db', borderRadius: 4, cursor: 'pointer', fontSize: 12, backgroundColor: '#fff', fontFamily: 'inherit' } as React.CSSProperties,
-    input: { padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: 4, fontSize: 12, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' } as React.CSSProperties,
-    select:{ padding: '4px 6px', border: '1px solid #d1d5db', borderRadius: 4, fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', backgroundColor: '#fff', boxSizing: 'border-box' } as React.CSSProperties,
-    section:{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 } as React.CSSProperties,
+    btn:   { padding: '4px 10px', border: '1px solid var(--app-border, #d1d5db)', borderRadius: 4, cursor: 'pointer', fontSize: 12, backgroundColor: 'var(--app-surface, #fff)', fontFamily: 'inherit' } as React.CSSProperties,
+    input: { padding: '4px 6px', border: '1px solid var(--app-border, #d1d5db)', borderRadius: 4, fontSize: 12, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' } as React.CSSProperties,
+    select:{ padding: '4px 6px', border: '1px solid var(--app-border, #d1d5db)', borderRadius: 4, fontSize: 12, fontFamily: 'inherit', cursor: 'pointer', backgroundColor: 'var(--app-surface, #fff)', boxSizing: 'border-box' } as React.CSSProperties,
+    section:{ fontSize: 11, fontWeight: 600, color: 'var(--app-muted, #6b7280)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 } as React.CSSProperties,
   }
 
   return (
     <div style={s.panel}>
       <div style={s.head}>
-        <span style={{ fontWeight: 600, color: '#111827' }}>🎨 Icônes</span>
+        <span style={{ fontWeight: 600, color: 'var(--app-text, #111827)' }}>🎨 Icônes</span>
         <button style={s.btn} onClick={onClose}>Fermer</button>
       </div>
 
@@ -555,11 +556,11 @@ const IconConfigEditor: FC<{
           {ICON_PALETTE.map(({ name, label }) => {
             const Ico = ICON_REGISTRY[name]
             return (
-              <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px', border: '1px solid #e5e7eb', borderRadius: 5, backgroundColor: '#f9fafb' }}>
+              <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px', border: '1px solid var(--app-border, #e5e7eb)', borderRadius: 5, backgroundColor: 'var(--app-secondary, #f9fafb)' }}>
                 <Ico size={16} />
                 <div>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#111827', lineHeight: 1.2 }}>{name}</div>
-                  <div style={{ fontSize: 10, color: '#9ca3af', lineHeight: 1.2 }}>{label}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--app-text, #111827)', lineHeight: 1.2 }}>{name}</div>
+                  <div style={{ fontSize: 10, color: 'var(--app-muted, #9ca3af)', lineHeight: 1.2 }}>{label}</div>
                 </div>
               </div>
             )
@@ -568,7 +569,7 @@ const IconConfigEditor: FC<{
 
         {/* Mappings */}
         <div style={s.section}>Mappings extension → icône</div>
-        <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 10 }}>
+        <div style={{ fontSize: 11, color: 'var(--app-muted, #6b7280)', marginBottom: 10 }}>
           Surcharge les associations par défaut. Utilisez <code>default</code> pour les extensions inconnues,
           <code> folder</code> et <code>folder-open</code> pour les dossiers.
         </div>
@@ -579,7 +580,7 @@ const IconConfigEditor: FC<{
             <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
               <input style={{ ...s.input, width: 80 }} value={ext} placeholder="ext"
                 onChange={e => upd(id, 'ext', e.target.value)} />
-              <span style={{ color: '#9ca3af', flexShrink: 0 }}>→</span>
+              <span style={{ color: 'var(--app-muted, #9ca3af)', flexShrink: 0 }}>→</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 }}>
                 <Ico size={16} />
                 <select style={{ ...s.select, flex: 1 }} value={icon}
@@ -587,13 +588,13 @@ const IconConfigEditor: FC<{
                   {ICON_PALETTE.map(p => <option key={p.name} value={p.name}>{p.name}</option>)}
                 </select>
               </div>
-              <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#9ca3af', fontSize: 14 }}
+              <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--app-muted, #9ca3af)', fontSize: 14 }}
                 onClick={() => remove(id)}>✕</button>
             </div>
           )
         })}
 
-        <button style={{ ...s.btn, color: '#2563eb', borderColor: '#bfdbfe', marginTop: 4 }} onClick={add}>
+        <button style={{ ...s.btn, color: 'var(--app-primary, #2563eb)', borderColor: 'var(--app-selected, #bfdbfe)', marginTop: 4 }} onClick={add}>
           + Ajouter un mapping
         </button>
         <JsonCopyField value={JSON.stringify(toConfig(mappings))} label="iconConfig" />
@@ -611,6 +612,7 @@ const ICON_W    = 22
 const DEFAULT_TREE_DATA = '{"name":"project","type":"folder","children":[{"name":"src","type":"folder","children":[{"name":"index.tsx","type":"file"},{"name":"App.tsx","type":"file"}]},{"name":"README.md","type":"file"},{"name":"package.json","type":"file"}]}'
 
 export const FileTree: FC = () => {
+  const appThemeStyle = useAppTheme();
   const [treeDataRaw] = Retool.useStateString({
     name: 'treeData',
     initialValue: '{"name":"project","type":"folder","children":[{"name":"src","type":"folder","children":[{"name":"index.tsx","type":"file","size":4096,"modified":"2024-03-01","price":12.5,"status":"actif"},{"name":"App.tsx","type":"file","size":2048,"modified":"2024-02-20","price":8.0,"status":"brouillon"}]},{"name":"README.md","type":"file","size":512,"modified":"2024-01-15","price":0,"status":"publié"},{"name":"package.json","type":"file","size":1024,"modified":"2024-03-01","price":0,"status":"actif"}]}',
@@ -682,7 +684,7 @@ export const FileTree: FC = () => {
     name: 'bgColor',
     label: 'Background color',
     description: 'Component background color (CSS value, e.g. #fff or transparent).',
-    initialValue: '#ffffff',
+    initialValue: '',
     inspector: 'text',
   })
 
@@ -690,7 +692,7 @@ export const FileTree: FC = () => {
     name: 'selectedBgColor',
     label: 'Selected row color',
     description: 'Background color of the selected row.',
-    initialValue: '#dbeafe',
+    initialValue: '',
     inspector: 'text',
   })
 
@@ -698,7 +700,7 @@ export const FileTree: FC = () => {
     name: 'hoverBgColor',
     label: 'Hover row color',
     description: 'Background color of the hovered row.',
-    initialValue: '#f3f4f6',
+    initialValue: '',
     inspector: 'text',
   })
 
@@ -738,7 +740,7 @@ export const FileTree: FC = () => {
     name: 'headerBgColor',
     label: 'Header background',
     description: 'Background color of the column header row.',
-    initialValue: '#f9fafb',
+    initialValue: '',
     inspector: 'text',
   })
 
@@ -841,16 +843,16 @@ export const FileTree: FC = () => {
   const colBlock = columns.map(c => `${colWidths[c.key] ?? c.width ?? 100}px`).join(' ')
   const gridCols = `1fr${colBlock ? ' ' + colBlock : ''}`
 
-  const resolvedFont            = fontFamily       || 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+  const resolvedFont            = fontFamily       || 'var(--app-font, Inter, system-ui, sans-serif)'
   const resolvedHeaderFont      = headerFontFamily || resolvedFont
-  const resolvedBg              = bgColor          || '#ffffff'
-  const resolvedSelectedBg      = selectedBgColor  || '#dbeafe'
-  const resolvedHoverBg         = hoverBgColor     || '#f3f4f6'
-  const resolvedHeaderBg        = headerBgColor    || '#f9fafb'
-  const resolvedTextColor         = textColor         || getContrastColor(resolvedBg)
-  const resolvedSelectedTextColor = selectedTextColor || getContrastColor(resolvedSelectedBg)
-  const resolvedHoverTextColor    = hoverTextColor    || getContrastColor(resolvedHoverBg)
-  const resolvedHeaderTextColor   = headerTextColor   || getContrastColor(resolvedHeaderBg)
+  const resolvedBg              = bgColor          || 'var(--app-surface, #ffffff)'
+  const resolvedSelectedBg      = selectedBgColor  || 'var(--app-selected, #dbeafe)'
+  const resolvedHoverBg         = hoverBgColor     || 'var(--app-secondary, #f3f4f6)'
+  const resolvedHeaderBg        = headerBgColor    || 'var(--app-secondary, #f9fafb)'
+  const resolvedTextColor         = textColor         || (resolvedBg.startsWith('var(') ? 'var(--app-text)' : getContrastColor(resolvedBg))
+  const resolvedSelectedTextColor = selectedTextColor || (resolvedSelectedBg.startsWith('var(') ? 'var(--app-text)' : getContrastColor(resolvedSelectedBg))
+  const resolvedHoverTextColor    = hoverTextColor    || (resolvedHoverBg.startsWith('var(') ? 'var(--app-text)' : getContrastColor(resolvedHoverBg))
+  const resolvedHeaderTextColor   = headerTextColor   || (resolvedHeaderBg.startsWith('var(') ? 'var(--app-text)' : getContrastColor(resolvedHeaderBg))
   const resolvedNameLabel         = nameColumnLabel   || 'Name'
 
   // Inject scoped styles with !important so they beat any Retool iframe CSS reset
@@ -864,8 +866,8 @@ export const FileTree: FC = () => {
   }, [resolvedFont, resolvedHeaderFont])
 
   const containerStyle: React.CSSProperties = {
-    fontSize: 13, color: resolvedTextColor, backgroundColor: resolvedBg,
-    border: '1px solid #e5e7eb', borderRadius: 6,
+    ...appThemeStyle, fontSize: 13, color: resolvedTextColor, backgroundColor: resolvedBg,
+    border: '1px solid var(--app-border, #e5e7eb)', borderRadius: 6,
     overflow: 'hidden', height: '100%', boxSizing: 'border-box',
     display: 'flex', flexDirection: 'column', position: 'relative',
   }
@@ -874,21 +876,21 @@ export const FileTree: FC = () => {
     padding: '5px 8px', fontWeight: 600, fontSize: 11,
     color: resolvedHeaderTextColor, backgroundColor: resolvedHeaderBg,
     textTransform: 'uppercase', letterSpacing: '0.05em',
-    borderBottom: '1px solid #e5e7eb',
+    borderBottom: '1px solid var(--app-border, #e5e7eb)',
     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
     position: 'sticky', top: 0, zIndex: 1, userSelect: 'none',
   }
 
   const toolbarStyle: React.CSSProperties = {
     display: 'flex', gap: 4, padding: '4px 8px',
-    borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb', flexShrink: 0,
+    borderBottom: '1px solid var(--app-border, #e5e7eb)', backgroundColor: 'var(--app-secondary, #f9fafb)', flexShrink: 0,
   }
 
   const toolBtnStyle = (active: boolean): React.CSSProperties => ({
-    padding: '3px 8px', border: '1px solid #d1d5db', borderRadius: 4,
+    padding: '3px 8px', border: '1px solid var(--app-border, #d1d5db)', borderRadius: 4,
     cursor: 'pointer', fontSize: 11, fontFamily: 'inherit',
-    backgroundColor: active ? '#dbeafe' : '#fff',
-    color: active ? '#1d4ed8' : '#374151',
+    backgroundColor: active ? 'var(--app-selected, #dbeafe)' : 'var(--app-surface, #fff)',
+    color: active ? 'var(--app-primary, #1d4ed8)' : 'var(--app-text, #374151)',
   })
 
   const flatNodes = flattenTree(root, 0, '', collapsed)
@@ -897,7 +899,7 @@ export const FileTree: FC = () => {
     <div id="ft-root" style={containerStyle}>
       {/* Erreur JSON visible uniquement si treeData est vraiment malformé */}
       {treeDataError && (
-        <div style={{ padding: '4px 8px', backgroundColor: '#fef2f2', borderBottom: '1px solid #fecaca', fontSize: 11, color: '#b91c1c' }}>
+        <div style={{ padding: '4px 8px', backgroundColor: 'var(--app-error-bg, #fef2f2)', borderBottom: '1px solid var(--app-danger, #fecaca)', fontSize: 11, color: 'var(--app-danger, #b91c1c)' }}>
           treeData invalide — arbre par défaut affiché.
         </div>
       )}
@@ -928,7 +930,7 @@ export const FileTree: FC = () => {
               <span
                 onMouseDown={e => startResize(col.key, e)}
                 style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: 6, cursor: 'col-resize', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ width: 2, height: '60%', backgroundColor: '#d1d5db', borderRadius: 1, pointerEvents: 'none' }} />
+                <span style={{ width: 2, height: '60%', backgroundColor: 'var(--app-border, #d1d5db)', borderRadius: 1, pointerEvents: 'none' }} />
               </span>
             </div>
           ))}

@@ -1,3 +1,4 @@
+import { useAppTheme } from "./theme";
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { Retool } from "@tryretool/custom-component-support";
 import moment from "moment-timezone";
@@ -35,7 +36,7 @@ const getEventStyleForConfidence = (
   if (confidence === "tentative") {
     return {
       background: "transparent",
-      color: "#000",
+      color: "var(--app-text, #000)",
       border: `2px dashed ${color}`
     };
   }
@@ -60,6 +61,7 @@ const getEventTooltip = (
 };
 
 export const CalendarWrapper: React.FC = () => {
+  const appThemeStyle = useAppTheme();
   const [calendarEventDataRaw] = Retool.useStateArray({
       name: "calendarEventData",
       initialValue: []
@@ -88,6 +90,13 @@ export const CalendarWrapper: React.FC = () => {
   const [crewNameField] = Retool.useStateString({ name: "crewNameField", initialValue: "crew_name" });
   const [scheduleConfidenceField] = Retool.useStateString({ name: "scheduleConfidence", initialValue: "scheduleConfidence" });
 
+  const [includeServiceTitan, setIncludeServiceTitan] = Retool.useStateBoolean({
+    name: "includeServiceTitan", initialValue: true
+  });
+  const [serviceTitanCrewField] = Retool.useStateString({
+    name: "serviceTitanCrewField", initialValue: "serviceTitanCrew"
+  });
+
   const TZ = selectedTimeZone || "UTC";
 
   const onWhiteboardEventClick = Retool.useEventCallback({ name: "onWhiteboardEventClick" });
@@ -111,9 +120,12 @@ export const CalendarWrapper: React.FC = () => {
   }, [calendarEventData, crewsData, currentDate]);
 
   return (
-    <div ref={wrapperRef} style={{ padding: 12, background: "#f8f9fb" }}>
+    <div ref={wrapperRef} style={{ ...appThemeStyle, padding: 12, background: "var(--app-canvas, #f8f9fb)" }}>
       <WhiteboardView
         events={calendarEventData}
+        includeServiceTitan={includeServiceTitan}
+        setIncludeServiceTitan={setIncludeServiceTitan}
+        serviceTitanCrewField={serviceTitanCrewField}
         crews={crewsData}
         TZ={TZ}
         currentDate={currentDate}
@@ -134,7 +146,10 @@ export const CalendarWrapper: React.FC = () => {
 };
 
 const WhiteboardView = ({
-  events,
+  events: allEvents,
+  includeServiceTitan,
+  setIncludeServiceTitan,
+  serviceTitanCrewField,
   crews,
   TZ,
   currentDate,
@@ -151,6 +166,33 @@ const WhiteboardView = ({
 }: any) => {
 
   const [viewMode, setViewMode] = useState("week");
+  const [serviceTitanCollapsed, setServiceTitanCollapsed] = useState(false);
+  const normalizeSource = (value: unknown) => String(value ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const isServiceTitan = (event: CalendarEvent) => {
+    const serviceCrew = crews?.find((crew: Crew) =>
+      String(crew.id) === String(event[resourceField]) || crew.name === event[crewNameField]);
+    return [event.source, event.platform, event[resourceField], event[crewNameField], serviceCrew?.name]
+      .some(value => normalizeSource(value) === "servicetitan");
+  };
+  const events = allEvents.filter((event: CalendarEvent) => includeServiceTitan || !isServiceTitan(event));
+  // Keep original event objects intact for Retool click callbacks.
+  const serviceCrewName = (event: CalendarEvent) => {
+    const value = event[serviceTitanCrewField];
+    return typeof value === "string" || typeof value === "number"
+      ? String(value).trim() || "Unassigned" : "Unassigned";
+  };
+  const serviceCrewNames: string[] = Array.from(new Set<string>(
+    events.filter(isServiceTitan).map(serviceCrewName)
+  )).sort((a, b) => a.localeCompare(b));
+  const displayCrews = [
+    ...crews.filter((crew: Crew) => normalizeSource(crew.name) !== "servicetitan" && normalizeSource(crew.id) !== "servicetitan")
+      .map((crew: Crew) => ({ ...crew, serviceTitan: false })),
+    ...serviceCrewNames.map(name => ({ id: `servicetitan:${name}`, name, serviceTitan: true }))
+  ];
+  const matchesCrew = (event: CalendarEvent, crew: Crew & { serviceTitan?: boolean }) =>
+    crew.serviceTitan
+      ? isServiceTitan(event) && serviceCrewName(event) === crew.name
+      : !isServiceTitan(event) && (event[resourceField] === crew.id || event[crewNameField] === crew.name);
   const today = moment().tz(TZ).format("YYYY-MM-DD");
 
   const colorMap = useMemo(() => {
@@ -193,11 +235,11 @@ const WhiteboardView = ({
 
   const weeks = weekCount
     ? Array.from({ length: weekCount }, (_, i) =>
-        baseDate.clone().add(i, "week").startOf("week")
+        baseDate.clone().add(i, "week").startOf("isoWeek")
       )
     : (() => {
-        const start = baseDate.clone().startOf("month").startOf("week");
-        const end = baseDate.clone().endOf("month").endOf("week");
+        const start = baseDate.clone().startOf("month").startOf("isoWeek");
+        const end = baseDate.clone().endOf("month").endOf("isoWeek");
 
         const weeks = [];
         let current = start.clone();
@@ -221,16 +263,22 @@ const WhiteboardView = ({
         (Retool as any).resize(height + 24);
       }
     }, 100);
-  }, [viewMode, weeks.length, events, crews]);
+  }, [viewMode, weeks.length, allEvents, crews, includeServiceTitan, serviceTitanCollapsed]);
 
   // Defining toolbar as a variable to be reused and always showing
   const toolbar = (
-    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
       <div style={{ fontSize: 20, fontWeight: 700 }}>
         {baseDate.format("MMMM YYYY")}
       </div>
 
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+        <label style={{ ...segmentedContainer, alignItems: "center", padding: "8px 12px", fontSize: 13, cursor: "pointer" }}>
+          <input type="checkbox" checked={includeServiceTitan}
+            onChange={event => setIncludeServiceTitan(event.target.checked)}
+            style={{ accentColor: "var(--app-primary, #2563eb)" }} />
+          Include ServiceTitan
+        </label>
 
         {/* LEFT GROUP */}
         <div style={segmentedContainer}>
@@ -324,6 +372,9 @@ const WhiteboardView = ({
   if (viewMode === "list") {
     const monthStart = baseDate.clone().startOf("month");
     const monthEnd = baseDate.clone().endOf("month");
+    const days = Array.from({ length: monthEnd.date() }, (_, i) =>
+      monthStart.clone().add(i, "day")
+    ).filter(day => day.isoWeekday() <= 5);
 
     const listEvents =
       events
@@ -332,17 +383,13 @@ const WhiteboardView = ({
           const end = safeDate(ev[endField]);
           if (!start || !end) return false;
 
-          return !end.isBefore(monthStart) && !start.isAfter(monthEnd);
+          return days.some(day => day.isBetween(start, end, "day", "[]"));
         })
         .sort((a: CalendarEvent, b: CalendarEvent) => {
           const aStart = safeDate(a[startField]);
           const bStart = safeDate(b[startField]);
           return (aStart?.valueOf() || 0) - (bStart?.valueOf() || 0);
         }) || [];
-
-    const days = Array.from({ length: monthEnd.date() }, (_, i) =>
-      monthStart.clone().add(i, "day")
-    );
 
     return (
       <div style={{ padding: 20 }}>
@@ -354,9 +401,9 @@ const WhiteboardView = ({
               marginTop: 20,
               padding: 24,
               textAlign: "center",
-              color: "#6b7280",
-              background: "#f9fafb",
-              border: "1px solid #e5e7eb",
+              color: "var(--app-muted, #6b7280)",
+              background: "var(--app-secondary, #f9fafb)",
+              border: "1px solid var(--app-border, #e5e7eb)",
               borderRadius: 8
             }}
           >
@@ -379,7 +426,7 @@ const WhiteboardView = ({
                 <div key={day.format("YYYY-MM-DD")} style={{ marginBottom: 22 }}>
                   <div style={{ fontWeight: 700, marginBottom: 10 }}>
                     {day.format("MMMM D, YYYY")}{" "}
-                    <span style={{ fontWeight: 400, color: "#6b7280" }}>
+                    <span style={{ fontWeight: 400, color: "var(--app-muted, #6b7280)" }}>
                       {day.format("dddd")}
                     </span>
                   </div>
@@ -388,7 +435,7 @@ const WhiteboardView = ({
                     const color =
                       ev.color ||
                       colorMap[ev[resourceField]] ||
-                      "#2563eb";
+                      "var(--app-primary, #2563eb)";
                     const eventStyle = getEventStyleForConfidence(ev, scheduleConfidenceField, color);
                     const eventTooltip = getEventTooltip(ev, titleField, scheduleConfidenceField);
 
@@ -446,12 +493,12 @@ const WhiteboardView = ({
   }
 
   return (
-    <div style={{ background: "#f3f4f6", padding: 16 }}>
+    <div style={{ background: "var(--app-secondary, #f3f4f6)", padding: 16 }}>
 
       {toolbar}
 
       {weeks.map((weekStart, wi) => {
-        const weekEnd = weekStart.clone().add(6, "days");
+        const weekEnd = weekStart.clone().add(4, "days").endOf("day");
 
         return (
           <div key={wi} style={{ marginBottom: 20 }}>
@@ -461,22 +508,22 @@ const WhiteboardView = ({
 
             <div style={{
               display: "grid",
-              gridTemplateColumns: "160px repeat(7, 1fr)",
-              border: "1px solid #e5e7eb",
-              background: "#fff"
+              gridTemplateColumns: "160px repeat(5, 1fr)",
+              border: "1px solid var(--app-border, #e5e7eb)",
+              background: "var(--app-surface, #fff)"
             }}>
 
-              <div style={{ ...headerCell, borderRight: "1px solid #e5e7eb" }}>CREW</div>
+              <div style={{ ...headerCell, borderRight: "1px solid var(--app-border, #e5e7eb)" }}>CREW</div>
 
-              {Array.from({ length: 7 }).map((_, i) => {
+              {Array.from({ length: 5 }).map((_, i) => {
                 const d = weekStart.clone().add(i, "days");
                 const isToday = d.format("YYYY-MM-DD") === today;
 
                 return (
                   <div key={i} style={{
                     ...headerCell,
-                    borderLeft: "1px solid #eee",
-                    background: isToday ? "#eef2ff" : "#fff"
+                    borderLeft: "1px solid var(--app-border, #eee)",
+                    background: isToday ? "var(--app-selected, #eef2ff)" : "var(--app-surface, #fff)"
                   }}>
                     {d.format("ddd")}
                     <div style={{
@@ -484,8 +531,8 @@ const WhiteboardView = ({
                       width: 26,
                       height: 26,
                       borderRadius: "50%",
-                      background: isToday ? "#2563eb" : "transparent",
-                      color: isToday ? "#fff" : "#000",
+                      background: isToday ? "var(--app-primary, #2563eb)" : "transparent",
+                      color: isToday ? "var(--app-on-primary, #fff)" : "var(--app-text, #000)",
                       marginInline: "auto",
                       fontWeight: 700,
                       lineHeight: "26px"
@@ -496,24 +543,22 @@ const WhiteboardView = ({
                 );
               })}
 
-              {crews?.filter((crew: Crew) => {
+              {displayCrews.filter((crew: Crew & { serviceTitan?: boolean }) => {
                 return events?.some((ev: CalendarEvent) => {
                   const start = safeDate(ev[startField]);
                   const end = safeDate(ev[endField]);
 
                   if (!start || !end) return false;
 
-                  const matchesCrew =
-                    ev[resourceField] === crew.id ||
-                    ev[crewNameField] === crew.name;
+                  const matches = matchesCrew(ev, crew);
 
                   const visibleThisWeek =
                     !end.isBefore(weekStart) &&
                     !start.isAfter(weekEnd);
 
-                  return matchesCrew && visibleThisWeek;
+                  return matches && visibleThisWeek;
                 });
-              }).map((crew: Crew) => {
+              }).map((crew: Crew & { serviceTitan?: boolean }, crewIndex: number, visibleCrews: (Crew & { serviceTitan?: boolean })[]) => {
 
                 const crewEvents = events
                   ?.map((ev: CalendarEvent) => {
@@ -521,15 +566,13 @@ const WhiteboardView = ({
                     const end = safeDate(ev[endField]);
                     if (!start || !end) return null;
 
-                    const matches =
-                      ev[resourceField] === crew.id ||
-                      ev[crewNameField] === crew.name;
+                    const matches = matchesCrew(ev, crew);
 
                     if (!matches) return null;
                     if (end.isBefore(weekStart) || start.isAfter(weekEnd)) return null;
 
-                    const renderStart = moment.max(start, weekStart);
-                    const renderEnd = moment.min(end, weekEnd);
+                    const renderStart = moment.max(start, weekStart).clone().startOf("day");
+                    const renderEnd = moment.min(end, weekEnd).clone().startOf("day");
 
                     return {
                       ev,
@@ -559,18 +602,38 @@ const WhiteboardView = ({
 
                 return (
                   <React.Fragment key={crew.id}>
+                    {crew.serviceTitan && !visibleCrews[crewIndex - 1]?.serviceTitan && (
+                      <button type="button" aria-expanded={!serviceTitanCollapsed}
+                        onClick={() => setServiceTitanCollapsed(value => !value)}
+                        style={{ gridColumn: "1 / -1", display: "flex", alignItems: "center", gap: 10,
+                          textAlign: "left", padding: "12px 10px", cursor: "pointer",
+                          background: "var(--app-selected, #eef2ff)", color: "var(--app-text, #111827)",
+                          border: "none", borderTop: "1px solid var(--app-border, #e5e7eb)", fontWeight: 700 }}>
+                        <span aria-hidden="true">{serviceTitanCollapsed ? "\u25b8" : "\u25be"}</span>
+                        ServiceTitan
+                        <span style={{ fontSize: 12, fontWeight: 400 }}>
+                          {visibleCrews.filter(row => row.serviceTitan).length} crews / {events.filter((event: CalendarEvent) => {
+                            const start = safeDate(event[startField]);
+                            const end = safeDate(event[endField]);
+                            return isServiceTitan(event) && start && end && !end.isBefore(weekStart) && !start.isAfter(weekEnd);
+                          }).length} appointments
+                        </span>
+                      </button>
+                    )}
+                    {(!crew.serviceTitan || !serviceTitanCollapsed) && <>
                     <div style={{
                       ...crewCell,
-                      borderRight: "1px solid #e5e7eb"
+                      borderRight: "1px solid var(--app-border, #e5e7eb)"
                     }}>
                       {crew.name}
+                      {crew.serviceTitan && <div style={{ marginTop: 4, fontSize: 11, color: "var(--app-muted, #6b7280)" }}>ServiceTitan / {crewEvents.length} appointments</div>}
                     </div>
 
                     <div style={{
-                      gridColumn: "span 7",
+                      gridColumn: "span 5",
                       position: "relative",
                       height: rowHeight,
-                      borderTop: "1px solid #eee",
+                      borderTop: "1px solid var(--app-border, #eee)",
                       overflow: "hidden",
                       padding: "2px 0"
                     }}>
@@ -580,9 +643,9 @@ const WhiteboardView = ({
                         width: "100%",
                         height: "100%",
                         display: "grid",
-                        gridTemplateColumns: "repeat(7,1fr)"
+                        gridTemplateColumns: "repeat(5,1fr)"
                       }}>
-                        {Array.from({ length: 7 }).map((_, i) => {
+                        {Array.from({ length: 5 }).map((_, i) => {
                           const d = weekStart.clone().add(i, "days");
                           const isToday = d.format("YYYY-MM-DD") === today;
 
@@ -590,8 +653,8 @@ const WhiteboardView = ({
                             <div
                               key={i}
                               style={{
-                                borderLeft: i ? "1px solid #f0f0f0" : "none",
-                                background: isToday ? "#f8fafc" : "transparent",
+                                borderLeft: i ? "1px solid var(--app-border, #f0f0f0)" : "none",
+                                background: isToday ? "var(--app-secondary, #f8fafc)" : "transparent",
                                 cursor: "pointer"
                               }}
                               onClick={() => {
@@ -612,7 +675,7 @@ const WhiteboardView = ({
                             e.ev.color ||
                             colorMap[crew.id] ||
                             colorMap[crew.name] ||
-                            "#2563eb";
+                            "var(--app-primary, #2563eb)";
                           const eventStyle = getEventStyleForConfidence(
                             e.ev,
                             scheduleConfidenceField,
@@ -637,8 +700,8 @@ const WhiteboardView = ({
                               style={{
                                 position: "absolute",
                                 top: 4 + li * 30,
-                                left: `calc(${e.startIdx * (100 / 7)}% + 2px)`,
-                                width: `calc(${e.span * (100 / 7)}% - 4px)`,
+                                left: `calc(${e.startIdx * (100 / 5)}% + 2px)`,
+                                width: `calc(${e.span * (100 / 5)}% - 4px)`,
                                 height: 22,
                                 ...eventStyle,
                                 borderRadius: 6,
@@ -660,6 +723,7 @@ const WhiteboardView = ({
                       )}
 
                     </div>
+                    </>}
                   </React.Fragment>
                 );
               })}
@@ -672,8 +736,8 @@ const WhiteboardView = ({
 };
 
 const btnLight: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #d1d5db",
+  background: "var(--app-surface, #fff)",
+  border: "1px solid var(--app-border, #d1d5db)",
   padding: "6px 10px",
   borderRadius: 6,
   fontSize: 12,
@@ -682,14 +746,14 @@ const btnLight: React.CSSProperties = {
 
 const btnActive: React.CSSProperties = {
   ...btnLight,
-  background: "#2563eb",
-  color: "#fff",
-  border: "1px solid #2563eb"
+  background: "var(--app-primary, #2563eb)",
+  color: "var(--app-on-primary, #fff)",
+  border: "1px solid var(--app-primary, #2563eb)"
 };
 
 const headerCell: React.CSSProperties = {
   padding: 10,
-  borderBottom: "1px solid #eee",
+  borderBottom: "1px solid var(--app-border, #eee)",
   textAlign: "center",
   fontSize: 12,
   fontWeight: 600
@@ -697,17 +761,17 @@ const headerCell: React.CSSProperties = {
 
 const crewCell: React.CSSProperties = {
   padding: 10,
-  borderTop: "1px solid #eee",
+  borderTop: "1px solid var(--app-border, #eee)",
   fontSize: 13,
   fontWeight: 500
 };
 
 const segmentedContainer: React.CSSProperties = {
   display: "flex",
-  background: "#FFFFFF",
+  background: "var(--app-surface, #FFFFFF)",
   padding: 4,
   borderRadius: 14,
-  border: "1px solid #e2e8f0",
+  border: "1px solid var(--app-border, #e2e8f0)",
   gap: 4
 };
 
@@ -718,14 +782,14 @@ const segBtn: React.CSSProperties = {
   borderRadius: 10,
   fontSize: 13,
   cursor: "pointer",
-  color: "#475569",
+  color: "var(--app-muted, #475569)",
   transition: "all 0.2s ease"
 };
 
 const activeSegBtn: React.CSSProperties = {
   ...segBtn,
-  background: "#2563eb",
-  color: "#fff",
+  background: "var(--app-primary, #2563eb)",
+  color: "var(--app-on-primary, #fff)",
   fontWeight: 600,
   boxShadow: "0 1px 2px rgba(0,0,0,0.1)"
 };

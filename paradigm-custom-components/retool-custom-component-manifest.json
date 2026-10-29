@@ -5,6 +5,13 @@
       "name": "File Tree",
       "model": [
         {
+          "name": "appTheme",
+          "initialValue": {},
+          "label": "App theme",
+          "description": "Bind to {{ theme }} to follow the app's colors and light/dark mode.",
+          "type": "object"
+        },
+        {
           "name": "treeData",
           "initialValue": "{\"name\":\"project\",\"type\":\"folder\",\"children\":[{\"name\":\"src\",\"type\":\"folder\",\"children\":[{\"name\":\"index.tsx\",\"type\":\"file\",\"size\":4096,\"modified\":\"2024-03-01\",\"price\":12.5,\"status\":\"actif\"},{\"name\":\"App.tsx\",\"type\":\"file\",\"size\":2048,\"modified\":\"2024-02-20\",\"price\":8.0,\"status\":\"brouillon\"}]},{\"name\":\"README.md\",\"type\":\"file\",\"size\":512,\"modified\":\"2024-01-15\",\"price\":0,\"status\":\"publié\"},{\"name\":\"package.json\",\"type\":\"file\",\"size\":1024,\"modified\":\"2024-03-01\",\"price\":0,\"status\":\"actif\"}]}",
           "type": "string"
@@ -65,7 +72,7 @@
         },
         {
           "name": "bgColor",
-          "initialValue": "#ffffff",
+          "initialValue": "",
           "inspector": "text",
           "label": "Background color",
           "description": "Component background color (CSS value, e.g. #fff or transparent).",
@@ -73,7 +80,7 @@
         },
         {
           "name": "selectedBgColor",
-          "initialValue": "#dbeafe",
+          "initialValue": "",
           "inspector": "text",
           "label": "Selected row color",
           "description": "Background color of the selected row.",
@@ -81,7 +88,7 @@
         },
         {
           "name": "hoverBgColor",
-          "initialValue": "#f3f4f6",
+          "initialValue": "",
           "inspector": "text",
           "label": "Hover row color",
           "description": "Background color of the hovered row.",
@@ -113,7 +120,7 @@
         },
         {
           "name": "headerBgColor",
-          "initialValue": "#f9fafb",
+          "initialValue": "",
           "inspector": "text",
           "label": "Header background",
           "description": "Background color of the column header row.",
@@ -161,6 +168,13 @@
     "CalendarWrapper": {
       "name": "Calendar Wrapper",
       "model": [
+        {
+          "name": "appTheme",
+          "initialValue": {},
+          "label": "App theme",
+          "description": "Bind to {{ theme }} to follow the app's colors and light/dark mode.",
+          "type": "object"
+        },
         {
           "name": "calendarEventData",
           "initialValue": [],
@@ -215,6 +229,16 @@
           "name": "scheduleConfidence",
           "initialValue": "scheduleConfidence",
           "type": "string"
+        },
+        {
+          "name": "serviceTitanCrewField",
+          "initialValue": "serviceTitanCrew",
+          "type": "string"
+        },
+        {
+          "name": "includeServiceTitan",
+          "initialValue": true,
+          "type": "boolean"
         }
       ],
       "events": [
@@ -227,6 +251,13 @@
     "AddressAutoComplete": {
       "name": "Address Auto Complete",
       "model": [
+        {
+          "name": "appTheme",
+          "initialValue": {},
+          "label": "App theme",
+          "description": "Bind to {{ theme }} to follow the app's colors and light/dark mode.",
+          "type": "object"
+        },
         {
           "name": "apiKey",
           "type": "string"
@@ -263,6 +294,92 @@
         }
       ],
       "events": [],
+      "defaultHeight": 5,
+      "defaultWidth": 2
+    },
+    "KeyValueEditor": {
+      "name": "Key Value Editor",
+      "model": [
+        {
+          "name": "appTheme",
+          "initialValue": {},
+          "label": "App theme",
+          "description": "Bind to {{ theme }} to follow the app's colors and light/dark mode.",
+          "type": "object"
+        },
+        {
+          "name": "data",
+          "initialValue": {},
+          "type": "object"
+        },
+        {
+          "name": "fields",
+          "initialValue": {},
+          "description": "Field configuration keyed by data key: label, type, options, group, hidden, readOnly, required.",
+          "type": "object"
+        },
+        {
+          "name": "saveResult",
+          "initialValue": {},
+          "description": "Bind to temporary state. Handler sets {requestId, success, error}.",
+          "type": "object"
+        },
+        {
+          "name": "value",
+          "initialValue": {},
+          "inspector": "hidden",
+          "type": "object"
+        },
+        {
+          "name": "changeset",
+          "initialValue": {},
+          "inspector": "hidden",
+          "type": "object"
+        },
+        {
+          "name": "saveRequest",
+          "initialValue": {},
+          "inspector": "hidden",
+          "type": "object"
+        },
+        {
+          "name": "recordId",
+          "initialValue": "",
+          "description": "Bind to the selected record ID. Changing it resets the editor.",
+          "type": "string"
+        },
+        {
+          "name": "title",
+          "initialValue": "Measure details",
+          "type": "string"
+        },
+        {
+          "name": "autoSave",
+          "initialValue": false,
+          "type": "boolean"
+        },
+        {
+          "name": "disabled",
+          "initialValue": false,
+          "type": "boolean"
+        },
+        {
+          "name": "isDirty",
+          "initialValue": false,
+          "inspector": "hidden",
+          "type": "boolean"
+        },
+        {
+          "name": "debounceMs",
+          "initialValue": 900,
+          "type": "number"
+        }
+      ],
+      "events": [
+        "change",
+        "save",
+        "reset"
+      ],
       "defaultHeight": 5,
       "defaultWidth": 2
     }

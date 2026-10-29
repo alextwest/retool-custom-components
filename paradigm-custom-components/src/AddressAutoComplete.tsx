@@ -1,3 +1,4 @@
+import { useAppTheme } from "./theme";
 import React, { useEffect, useState } from "react";
 import { Retool } from "@tryretool/custom-component-support";
 
@@ -14,6 +15,7 @@ type PlaceSuggestion = {
 };
 
 export const AddressAutoComplete = () => {
+  const appThemeStyle = useAppTheme();
   const [apiKey] = Retool.useStateString({
     name: "apiKey",
   });
@@ -197,25 +199,25 @@ export const AddressAutoComplete = () => {
 
   if (!apiKey) {
     return (
-      <div style={{ padding: "8px", fontSize: "13px", color: "#b45309" }}>
+      <div style={{ ...appThemeStyle, padding: "8px", fontSize: "13px", color: "var(--app-warning, #b45309)" }}>
         Missing Google Maps API key.
       </div>
     );
   }
 
   return (
-    <div style={{ position: "relative", width: "100%" }}>
+    <div style={{ ...appThemeStyle, position: "relative", width: "100%" }}>
       <label
         style={{
             display: "block",
             marginBottom: "4px",
             fontSize: "12px",
             fontWeight: 600,
-            color: "#374151",
+            color: "var(--app-text, #374151)",
         }}
         >
         {label}
-        {required && <span style={{ color: "#dc2626" }}> *</span>}
+        {required && <span style={{ color: "var(--app-danger, #dc2626)" }}> *</span>}
       </label>
 
       <input
@@ -230,12 +232,12 @@ export const AddressAutoComplete = () => {
         height: "32px",
         boxSizing: "border-box",
         padding: searchText ? "0 32px 0 8px" : "0 8px",
-        border: "1px solid #d1d5db",
+        border: "1px solid var(--app-border, #d1d5db)",
         borderRadius: "4px",
         fontSize: "12px",
-        fontFamily: "Inter, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
-        color: "#111827",
-        backgroundColor: "#ffffff",
+        fontFamily: "inherit",
+        color: "var(--app-text, #111827)",
+        backgroundColor: "var(--app-surface, #ffffff)",
         outline: "none",
         }}
       />
@@ -253,7 +255,7 @@ export const AddressAutoComplete = () => {
             cursor: "pointer",
             fontSize: "14px",
             lineHeight: "14px",
-            color: "#6b7280",
+            color: "var(--app-muted, #6b7280)",
             padding: "2px",
         }}
         >
@@ -266,7 +268,7 @@ export const AddressAutoComplete = () => {
             style={{
             marginTop: "4px",
             fontSize: "12px",
-            color: "#dc2626",
+            color: "var(--app-danger, #dc2626)",
             }}
         >
             ● {validationMessage}
@@ -274,7 +276,7 @@ export const AddressAutoComplete = () => {
       )} */}
 
       {loading && (
-        <div style={{ padding: "6px 8px", fontSize: "12px", color: "#6b7280" }}>
+        <div style={{ padding: "6px 8px", fontSize: "12px", color: "var(--app-muted, #6b7280)" }}>
           Searching...
         </div>
       )}
@@ -286,8 +288,8 @@ export const AddressAutoComplete = () => {
             top: "54px",
             left: 0,
             right: 0,
-            background: "#ffffff",
-            border: "1px solid #d1d5db",
+            background: "var(--app-surface, #ffffff)",
+            border: "1px solid var(--app-border, #d1d5db)",
             borderRadius: "4px",
             zIndex: 9999,
             maxHeight: "240px",
@@ -306,7 +308,7 @@ export const AddressAutoComplete = () => {
                 style={{
                   padding: "8px 10px",
                   cursor: "pointer",
-                  borderBottom: "1px solid #f3f4f6",
+                  borderBottom: "1px solid var(--app-secondary, #f3f4f6)",
                   fontSize: "13px",
                 }}
               >
