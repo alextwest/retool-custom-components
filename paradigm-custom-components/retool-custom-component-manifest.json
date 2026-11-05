@@ -151,6 +151,14 @@
           "type": "boolean"
         },
         {
+          "name": "showDesktopOffice",
+          "initialValue": true,
+          "inspector": "checkbox",
+          "label": "Allow Office desktop apps",
+          "description": "Prefer Office desktop opening directly from the row/arrow; users can choose Browser in the tree. File-select handlers should skip files with openHandled=true. Requires Office installed and browser permission. PDFs and folders keep browser links.",
+          "type": "boolean"
+        },
+        {
           "name": "badgeBorderRadius",
           "initialValue": 4,
           "inspector": "text",
@@ -351,7 +359,7 @@
         {
           "name": "recordId",
           "initialValue": "",
-          "description": "Bind to the selected record ID. Changing it resets the editor.",
+          "description": "Bind to the selected record ID. Unsaved drafts are cached per record while this component remains mounted.",
           "type": "string"
         },
         {
@@ -362,6 +370,12 @@
         {
           "name": "autoSave",
           "initialValue": false,
+          "type": "boolean"
+        },
+        {
+          "name": "saveWhileFocused",
+          "initialValue": true,
+          "description": "Save after a typing pause even if the field stays focused. Turn off to wait until the field loses focus.",
           "type": "boolean"
         },
         {
@@ -376,6 +390,18 @@
           "type": "boolean"
         },
         {
+          "name": "isSaving",
+          "initialValue": false,
+          "inspector": "hidden",
+          "type": "boolean"
+        },
+        {
+          "name": "hasUnsavedChanges",
+          "initialValue": false,
+          "inspector": "hidden",
+          "type": "boolean"
+        },
+        {
           "name": "debounceMs",
           "initialValue": 1000,
           "description": "Autosave delay in milliseconds for dropdown changes.",
@@ -384,7 +410,7 @@
         {
           "name": "typingDebounceMs",
           "initialValue": 2500,
-          "description": "Autosave delay in milliseconds after leaving a text, number, date, or JSON field. Autosave pauses while editing these fields.",
+          "description": "Idle delay after typing, or after leaving a field. New edits are cached while an earlier request saves.",
           "type": "number"
         }
       ],
@@ -395,6 +421,173 @@
       ],
       "defaultHeight": 5,
       "defaultWidth": 2
+    },
+    "UpdatesComposer": {
+      "name": "Updates Composer",
+      "model": [
+        {
+          "name": "appTheme",
+          "initialValue": {},
+          "label": "App theme",
+          "description": "Bind to {{ theme }} to follow the app's colors and light/dark mode.",
+          "type": "object"
+        },
+        {
+          "name": "users",
+          "initialValue": [],
+          "description": "Mention directory: array of {full_name, email}. Bind to your user query (all users).",
+          "type": "array"
+        },
+        {
+          "name": "mentionedUsers",
+          "initialValue": [],
+          "inspector": "hidden",
+          "type": "array"
+        },
+        {
+          "name": "value",
+          "initialValue": "",
+          "description": "Plain-text draft. Bind existing posting queries to this value.",
+          "type": "string"
+        },
+        {
+          "name": "contextId",
+          "initialValue": "",
+          "description": "Project ID for updates, or parent update ID for replies. Changing it clears the draft.",
+          "type": "string"
+        },
+        {
+          "name": "resetKey",
+          "initialValue": "",
+          "description": "Change only after a successful post to clear the draft.",
+          "type": "string"
+        },
+        {
+          "name": "placeholder",
+          "initialValue": "Write an update… Type @ to mention someone",
+          "type": "string"
+        },
+        {
+          "name": "submitLabel",
+          "initialValue": "Post Update",
+          "type": "string"
+        },
+        {
+          "name": "submission",
+          "initialValue": {},
+          "inspector": "hidden",
+          "type": "object"
+        },
+        {
+          "name": "showSubmit",
+          "initialValue": true,
+          "type": "boolean"
+        },
+        {
+          "name": "disabled",
+          "initialValue": false,
+          "type": "boolean"
+        },
+        {
+          "name": "loading",
+          "initialValue": false,
+          "type": "boolean"
+        }
+      ],
+      "events": [
+        "submit",
+        "change"
+      ],
+      "defaultHeight": 40,
+      "defaultWidth": 12
+    },
+    "ProjectUpdates": {
+      "name": "Project Updates",
+      "model": [
+        {
+          "name": "appTheme",
+          "initialValue": {},
+          "label": "App theme",
+          "description": "Bind to {{ theme }} to follow the app's colors and light/dark mode.",
+          "type": "object"
+        },
+        {
+          "name": "users",
+          "initialValue": [],
+          "description": "All permitted mention users: {{ formatDataAsArray(qMentionUsers.data ?? {}) }}",
+          "type": "array"
+        },
+        {
+          "name": "updates",
+          "initialValue": [],
+          "description": "Root updates and any inline replies from qProjectUpdates.",
+          "type": "array"
+        },
+        {
+          "name": "replies",
+          "initialValue": [],
+          "description": "Reply rows from qProjectReplies. Duplicate IDs are merged.",
+          "type": "array"
+        },
+        {
+          "name": "attachments",
+          "initialValue": [],
+          "description": "Required for saved file links: {{ formatDataAsArray(qProjectUpdateFiles.data ?? {}) }}. Include update_id, file_name and sharepoint_web_url; optional thumbnail_url for previews.",
+          "type": "array"
+        },
+        {
+          "name": "project",
+          "initialValue": {},
+          "description": "Bind to {{ selectedProjectRow.value ?? {} }}. Captured in every submission.",
+          "type": "object"
+        },
+        {
+          "name": "postResult",
+          "initialValue": {},
+          "description": "Required: bind to {{ updatesPostResult.value }} or {{ postProjectUpdate.data ?? {} }}. The matching {requestId, success} acknowledgment ends Posting.",
+          "type": "object"
+        },
+        {
+          "name": "postRequest",
+          "initialValue": {},
+          "inspector": "hidden",
+          "type": "object"
+        },
+        {
+          "name": "title",
+          "initialValue": "Project Updates",
+          "type": "string"
+        },
+        {
+          "name": "disabled",
+          "initialValue": false,
+          "type": "boolean"
+        },
+        {
+          "name": "loading",
+          "initialValue": false,
+          "description": "Read query loading state; post locking is automatic until postResult acknowledges the request.",
+          "type": "boolean"
+        },
+        {
+          "name": "hasPendingPost",
+          "initialValue": false,
+          "inspector": "hidden",
+          "type": "boolean"
+        },
+        {
+          "name": "maxAttachmentMB",
+          "initialValue": 20,
+          "description": "Total raw attachment size per post. Base64 adds about one-third. Match your upload query limits.",
+          "type": "number"
+        }
+      ],
+      "events": [
+        "post",
+        "refresh"
+      ],
+      "defaultHeight": 100,
+      "defaultWidth": 12
     }
   }
 }

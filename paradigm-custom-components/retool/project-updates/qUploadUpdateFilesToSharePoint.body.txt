@@ -1,0 +1,8 @@
+{
+  workstreamId: {{ workstreamId }},
+  projectId: {{ projectId }},
+  updateId: {{ updateId }},
+  uploadedBy: {{ uploadedBy }},
+  sourceContext: {{ sourceContext }},
+  files: {{ files }}
+}

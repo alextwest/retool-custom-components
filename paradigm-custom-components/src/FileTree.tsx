@@ -1,4 +1,5 @@
 import { useAppTheme } from "./theme";
+import { fileOpenTarget, officeFolderUrl } from "./officeDesktopLink";
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { type FC } from 'react'
 import { Retool } from '@tryretool/custom-component-support'
@@ -11,6 +12,7 @@ interface TreeNode {
   alias?: string      // nom d'affichage alternatif (remplace name dans l'arbre)
   url?: string        // lien physique vers le fichier (NAS, Google Drive, Retool Files…)
   children?: TreeNode[]
+  officeUrl?: string // Optional direct HTTPS document URL when url is a sharing/browser-view link.
   [key: string]: unknown
 }
 
@@ -29,18 +31,20 @@ interface FlatNode {
   depth: number
   path: string
   hasChildren: boolean
+  parentFolderUrl?: string
 }
 
 // ─── Tree flattening ──────────────────────────────────────────────────────────
 
 function flattenTree(
-  node: TreeNode, depth: number, parentPath: string, collapsed: Set<string>
+  node: TreeNode, depth: number, parentPath: string, collapsed: Set<string>, parentFolderUrl?: string
 ): FlatNode[] {
   const path = parentPath ? `${parentPath}/${node.name}` : node.name
   const hasChildren = node.type === 'folder' && Boolean(node.children?.length)
-  const result: FlatNode[] = [{ node, depth, path, hasChildren }]
+  const result: FlatNode[] = [{ node, depth, path, hasChildren, parentFolderUrl }]
+  const folderUrl = node.type === 'folder' ? officeFolderUrl(node.url, parentFolderUrl, node.name) : undefined
   if (hasChildren && !collapsed.has(path))
-    for (const child of node.children!) result.push(...flattenTree(child, depth + 1, path, collapsed))
+    for (const child of node.children!) result.push(...flattenTree(child, depth + 1, path, collapsed, folderUrl))
   return result
 }
 
@@ -656,6 +660,21 @@ export const FileTree: FC = () => {
     inspector: 'hidden',
   })
 
+  const [showDesktopOffice] = Retool.useStateBoolean({
+    name: 'showDesktopOffice', label: 'Allow Office desktop apps', initialValue: true,
+    inspector: 'checkbox',
+    description: 'Prefer Office desktop opening directly from the row/arrow; users can choose Browser in the tree. File-select handlers should skip files with openHandled=true. Requires Office installed and browser permission. PDFs and folders keep browser links.',
+  })
+  const [openPreference, setOpenPreference] = useState<'desktop' | 'browser'>(() => {
+    try { return window.localStorage.getItem('paradigm.fileTree.officeOpenPreference') === 'browser' ? 'browser' : 'desktop' } catch { return 'desktop' }
+  })
+  const [desktopAttempt, setDesktopAttempt] = useState<{ app: string; browserUrl: string } | null>(null)
+  const chooseOpenPreference = (preference: 'desktop' | 'browser') => {
+    setOpenPreference(preference)
+    setDesktopAttempt(null)
+    try { window.localStorage.setItem('paradigm.fileTree.officeOpenPreference', preference) } catch { /* Retain the preference in memory if storage is unavailable. */ }
+  }
+
   const [, setSelectedNode] = Retool.useStateString({
     name: 'selectedNode',
     label: 'Selected node',
@@ -897,6 +916,23 @@ export const FileTree: FC = () => {
 
   return (
     <div id="ft-root" style={containerStyle}>
+      {showDesktopOffice && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 6, padding: '5px 8px', fontSize: 11, color: 'var(--app-muted, #6b7280)' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>Open Office files in
+            <select aria-label="Open Office files in" value={openPreference}
+              onChange={e => chooseOpenPreference(e.target.value as 'desktop' | 'browser')}
+              style={{ font: 'inherit', color: 'var(--app-text, #111827)', background: 'var(--app-surface, #fff)', border: '1px solid var(--app-border, #d1d5db)', borderRadius: 4, padding: '2px 5px' }}>
+              <option value="desktop">Desktop app</option><option value="browser">Browser</option>
+            </select>
+          </label>
+        </div>
+      )}
+      {desktopAttempt && (
+        <div role="status" style={{ padding: '5px 8px', fontSize: 11, color: 'var(--app-muted, #6b7280)' }}>
+          If {desktopAttempt.app} didn’t open,{' '}
+          <a href={desktopAttempt.browserUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--app-primary, #2563eb)' }}>open in browser</a>.
+        </div>
+      )}
       {/* Erreur JSON visible uniquement si treeData est vraiment malformé */}
       {treeDataError && (
         <div style={{ padding: '4px 8px', backgroundColor: 'var(--app-error-bg, #fef2f2)', borderBottom: '1px solid var(--app-danger, #fecaca)', fontSize: 11, color: 'var(--app-danger, #b91c1c)' }}>
@@ -936,25 +972,32 @@ export const FileTree: FC = () => {
           ))}
 
           {/* Rows */}
-          {flatNodes.map(({ node, depth, path, hasChildren }) => {
+          {flatNodes.map(({ node, depth, path, hasChildren, parentFolderUrl }) => {
             const isCollapsed = collapsed.has(path)
             const isSelected  = selectedPath === path
             const isHovered   = hoveredPath  === path
             const bg       = isSelected ? resolvedSelectedBg : isHovered ? resolvedHoverBg : 'transparent'
             const textCol  = isSelected ? resolvedSelectedTextColor : isHovered ? resolvedHoverTextColor : resolvedTextColor
             const IconComp = resolveIcon(node, !isCollapsed, iconConfig)
+            const target = fileOpenTarget(node, parentFolderUrl, showDesktopOffice && openPreference === 'desktop')
+            const rememberDesktopAttempt = () => setDesktopAttempt(target.openMode === 'desktop' && target.browserUrl ? { app: target.app, browserUrl: target.browserUrl } : null)
+            const selectRow = (launchHere: boolean) => {
+              const openHandled = node.type === 'file' && !!target.openUrl
+              setSelectedPath(path)
+              setSelectedFileUrl(node.url ?? '')
+              setSelectedNode(JSON.stringify({ ...Object.fromEntries(Object.entries(node).filter(([k]) => k !== 'children')), openUrl: target.openUrl, browserUrl: target.browserUrl, desktopUrl: target.desktopUrl, openMode: target.openMode, desktopApp: target.app, openHandled }))
+              rememberDesktopAttempt()
+              // Run in the original click handler, not a later Retool query/worker callback.
+              if (launchHere && openHandled) window.open(target.openUrl, '_blank', 'noopener,noreferrer')
+              onFileSelect()
+            }
             const cellBase: React.CSSProperties = { backgroundColor: bg, display: 'flex', alignItems: 'center', padding: '2px 8px', overflow: 'hidden' }
 
             return (
               <React.Fragment key={path}>
                 <div
                   style={{ ...cellBase, paddingLeft: depth * INDENT_PX, cursor: 'pointer' }}
-                  onClick={() => {
-                    setSelectedPath(path)
-                    setSelectedFileUrl(node.url ?? '')
-                    setSelectedNode(JSON.stringify(Object.fromEntries(Object.entries(node).filter(([k]) => k !== 'children'))))
-                    onFileSelect()
-                  }}
+                  onClick={() => selectRow(true)}
                   onMouseEnter={() => setHoveredPath(path)}
                   onMouseLeave={() => setHoveredPath('')}>
                   <span
@@ -966,28 +1009,34 @@ export const FileTree: FC = () => {
                     <IconComp size={15} />
                   </span>
 
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: textCol }}>
-                    {(node.alias as string) ?? node.name}
-                  </span>
+                  {node.type === 'file' && target.openUrl ? (
+                    <a href={target.openUrl} target="_blank" rel="noopener noreferrer" aria-label={`Open ${node.name}`}
+                      title={target.openMode === 'desktop' ? `Open in ${target.app} desktop` : 'Open in browser'}
+                      onClick={e => { e.stopPropagation(); selectRow(false) }}
+                      style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: textCol, textDecoration: 'none' }}>
+                      {(node.alias as string) ?? node.name}
+                    </a>
+                  ) : (
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: textCol }}>
+                      {(node.alias as string) ?? node.name}
+                    </span>
+                  )}
 
-                  {node.url && (
-                    <button
-                      title="Open in SharePoint"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        window.open(String(node.url), "_blank", "noopener,noreferrer");
-                      }}
-                      style={{
-                        border: "none",
-                        background: "transparent",
-                        cursor: "pointer",
-                        padding: "0 4px",
-                        fontSize: 12,
-                        lineHeight: 1
-                      }}
-                    >
+                  {target.openUrl && (
+                    <a href={target.openUrl} target="_blank" rel="noopener noreferrer"
+                      title={target.openMode === 'desktop' ? `Open in ${target.app} desktop` : 'Open in browser'}
+                      aria-label={target.openMode === 'desktop' ? `Open ${node.name} in ${target.app} desktop` : `Open ${node.name} in browser`}
+                      onClick={e => { e.stopPropagation(); rememberDesktopAttempt() }}
+                      style={{ flexShrink: 0, color: textCol, padding: '0 4px', fontSize: 12, lineHeight: 1, textDecoration: 'none' }}>
                       ↗
-                    </button>
+                    </a>
+                  )}
+                  {target.openMode === 'desktop' && target.browserUrl && (
+                    <a href={target.browserUrl} target="_blank" rel="noopener noreferrer" aria-label={`Open ${node.name} in browser`}
+                      onClick={e => e.stopPropagation()}
+                      style={{ flexShrink: 0, color: 'var(--app-primary, #2563eb)', padding: '0 4px', fontSize: 10 }}>
+                      Browser
+                    </a>
                   )}
 
                 </div>
@@ -999,6 +1048,7 @@ export const FileTree: FC = () => {
                   return (
                     <div key={col.key}
                       style={{ ...cellBase, justifyContent: justify, color: textCol }}
+                      onClick={() => selectRow(true)}
                       onMouseEnter={() => setHoveredPath(path)}
                       onMouseLeave={() => setHoveredPath('')}>
                       {badgeColor ? (

@@ -1,8 +1,18 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { Retool } from "@tryretool/custom-component-support";
 import { useAppTheme } from "./theme";
 import { StatusDropdown } from "./StatusDropdown";
 import { pairedFieldWarnings } from "./pairedFieldWarnings";
+import {
+  changedValues as diff,
+  initialEditorRecord,
+  KeyValueSaveQueue,
+} from "./keyValueSaveQueue";
 import {
   ClearRule,
   statusClearReason,
@@ -31,7 +41,6 @@ type Field = {
   group?: string;
   pairedField?: string;
 };
-const equal = (a: any, b: any) => JSON.stringify(a) === JSON.stringify(b);
 const safeLink = (value: unknown): string | null => {
   if (typeof value !== "string") return null;
   try {
@@ -41,12 +50,6 @@ const safeLink = (value: unknown): string | null => {
     return null;
   }
 };
-const diff = (base: Data, draft: Data) =>
-  Object.fromEntries(
-    Object.keys(draft)
-      .filter((k) => !equal(base[k], draft[k]))
-      .map((k) => [k, draft[k]]),
-  );
 
 export const KeyValueEditor = () => {
   const theme = useAppTheme();
@@ -55,7 +58,7 @@ export const KeyValueEditor = () => {
     name: "recordId",
     initialValue: "",
     description:
-      "Bind to the selected record ID. Changing it resets the editor.",
+      "Bind to the selected record ID. Unsaved drafts are cached per record while this component remains mounted.",
   });
   const [fields] = Retool.useStateObject({
     name: "fields",
@@ -86,7 +89,13 @@ export const KeyValueEditor = () => {
     name: "typingDebounceMs",
     initialValue: 2500,
     description:
-      "Autosave delay in milliseconds after leaving a text, number, date, or JSON field. Autosave pauses while editing these fields.",
+      "Idle delay after typing, or after leaving a field. New edits are cached while an earlier request saves.",
+  });
+  const [saveWhileFocused] = Retool.useStateBoolean({
+    name: "saveWhileFocused",
+    initialValue: true,
+    description:
+      "Save after a typing pause even if the field stays focused. Turn off to wait until the field loses focus.",
   });
   const [disabled] = Retool.useStateBoolean({
     name: "disabled",
@@ -118,27 +127,47 @@ export const KeyValueEditor = () => {
     initialValue: false,
     inspector: "hidden",
   });
+  const [, setIsSaving] = Retool.useStateBoolean({
+    name: "isSaving",
+    initialValue: false,
+    inspector: "hidden",
+  });
+  const [, setHasUnsavedChanges] = Retool.useStateBoolean({
+    name: "hasUnsavedChanges",
+    initialValue: false,
+    inspector: "hidden",
+  });
   const change = Retool.useEventCallback({ name: "change" });
   const save = Retool.useEventCallback({ name: "save" });
   const reset = Retool.useEventCallback({ name: "reset" });
-  const [base, setBase] = useState<Data>(data);
-  const [draft, setDraft] = useState<Data>(data);
-  const [search, setSearch] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [message, setMessage] = useState("");
-  const [editingField, setEditingField] = useState<string | null>(null);
-  const [lastEditWasDropdown, setLastEditWasDropdown] = useState(false);
-  const [pending, setPending] = useState<{
-    requestId: string;
-    value: Data;
-    original: Data;
-    recordId: string;
-  } | null>(null);
-  const previousId = useRef(recordId);
-  const attempted = useRef("");
+  const queueRef = useRef<KeyValueSaveQueue | null>(null);
+  if (!queueRef.current) queueRef.current = new KeyValueSaveQueue();
+  const queue = queueRef.current;
+  const state = useSyncExternalStore(
+    queue.subscribe,
+    queue.getSnapshot,
+    queue.getSnapshot,
+  );
+  const dataId = data.measure_id ?? data.id;
+  const record =
+    state.records[recordId] ??
+    initialEditorRecord(
+      dataId == null || String(dataId) === recordId ? data : {},
+    );
+  const { base, draft, errors, message } = record;
+  const pending = state.pending;
+  const currentPending = pending?.recordId === recordId;
   const changes = diff(base, draft);
   const count = Object.keys(changes).length;
-  const locked = disabled || !!pending;
+  const newerEdits =
+    !!currentPending && Object.keys(diff(pending!.value, draft)).length > 0;
+  const saveable = currentPending ? newerEdits : count > 0;
+  const otherDirtyRecords = Object.entries(state.records).filter(
+    ([id, r]) =>
+      id !== recordId && Object.keys(diff(r.base, r.draft)).length > 0,
+  ).length;
+  const hasUnsavedChanges = !!pending || count > 0 || otherDirtyRecords > 0;
+  const [search, setSearch] = useState("");
   const publish = (next: Data, baseline: Data) => {
     const delta = diff(baseline, next);
     setValue(next);
@@ -146,85 +175,55 @@ export const KeyValueEditor = () => {
     setDirty(Object.keys(delta).length > 0);
   };
   useEffect(() => {
-    const switched = previousId.current !== recordId;
-    previousId.current = recordId;
-    if (switched || (!pending && count === 0)) {
-      setBase(data);
-      setDraft(data);
-      publish(data, data);
-      if (switched) {
-        setEditingField(null);
-        setPending(null);
-        setErrors({});
-        setMessage("");
-        attempted.current = "";
-      }
-    }
-  }, [JSON.stringify(data), recordId]);
+    queue.select(recordId, data, Date.now());
+  }, [recordId, JSON.stringify(data)]);
   useEffect(() => {
-    if (
-      !pending ||
-      pending.recordId !== recordId ||
-      saveResult.requestId !== pending.requestId
-    )
-      return;
-    if (saveResult.success === true) {
-      setBase(pending.value);
-      setDraft(pending.value);
-      publish(pending.value, pending.value);
-      setMessage("Saved");
-    } else {
-      setMessage(
-        String(
-          saveResult.error ||
-            "Save failed. Your changes are still here. Retry Save.",
-        ),
-      );
-    }
-    setPending(null);
-  }, [JSON.stringify(saveResult), pending, recordId]);
-  const requestSave = () => {
-    if (locked || !count || Object.keys(errors).length) return;
-    const requestId = crypto.randomUUID();
-    attempted.current = JSON.stringify(draft);
-    setSaveRequest({
-      requestId,
-      recordId,
-      changeset: changes,
-      value: draft,
-      original: base,
-    });
-    setPending({ requestId, value: draft, original: base, recordId });
-    setMessage("");
-    save();
-  };
+    queue.acknowledge(saveResult);
+  }, [JSON.stringify(saveResult)]);
   useEffect(() => {
-    if (
-      !autoSave ||
-      editingField !== null ||
-      !count ||
-      locked ||
-      Object.keys(errors).length ||
-      attempted.current === JSON.stringify(draft)
-    )
-      return;
-    const delay = lastEditWasDropdown
-      ? debounceMs || 1000
-      : typingDebounceMs || 2500;
-    const timer = setTimeout(requestSave, Math.max(250, delay));
+    publish(draft, base);
+  }, [recordId, JSON.stringify(base), JSON.stringify(draft)]);
+  useEffect(() => {
+    setIsSaving(!!pending);
+    setHasUnsavedChanges(hasUnsavedChanges);
+  }, [!!pending, hasUnsavedChanges]);
+  useEffect(() => {
+    const settings = {
+      autoSave,
+      disabled,
+      debounceMs,
+      typingDebounceMs,
+      saveWhileFocused,
+    };
+    const delay = queue.delay(settings, Date.now());
+    if (delay === null) return;
+    const timer = setTimeout(() => {
+      const request = queue.start(settings, Date.now(), crypto.randomUUID());
+      if (!request) return;
+      setSaveRequest(request);
+      save();
+    }, delay);
     return () => clearTimeout(timer);
   }, [
+    state,
     autoSave,
+    disabled,
     debounceMs,
     typingDebounceMs,
-    editingField,
-    lastEditWasDropdown,
-    JSON.stringify(draft),
-    JSON.stringify(errors),
-    locked,
-    count,
+    saveWhileFocused,
   ]);
-  const edit = (key: string, text: any, type: string, config: Field) => {
+  const requestSave = () => {
+    if (!disabled) queue.queue(recordId);
+  };
+  const setEditingField = (field: string | null) =>
+    queue.focus(recordId, field, Date.now());
+  const edit = (
+    key: string,
+    text: any,
+    type: string,
+    config: Field,
+    browserInvalid = false,
+  ) => {
     if (Object.prototype.hasOwnProperty.call(statusRules, key)) {
       if (typeof text === "string" && text.trim().toLowerCase() === "not set")
         return;
@@ -241,9 +240,6 @@ export const KeyValueEditor = () => {
       )
         return;
     }
-    setLastEditWasDropdown(
-      type === "boolean" || type === "select" || type === "checkbox",
-    );
     let value = text;
     let error = "";
     if (type === "number" && text !== "" && text != null) {
@@ -259,14 +255,18 @@ export const KeyValueEditor = () => {
     }
     if (text === "") value = null;
     if (config.required && (value === null || value === "")) error = "Required";
-    const nextErrors = { ...errors };
-    if (error) nextErrors[key] = error;
-    else delete nextErrors[key];
-    setErrors(nextErrors);
-    const next = { ...draft, [key]: value };
-    setDraft(next);
-    publish(next, base);
-    setMessage("");
+    if (browserInvalid)
+      error = type === "date" ? "Enter a valid date" : "Enter a valid number";
+    queue.edit(
+      recordId,
+      key,
+      value,
+      error,
+      type === "boolean" || type === "select" || type === "checkbox",
+      Date.now(),
+    );
+    const next = queue.getSnapshot().records[recordId];
+    if (next) publish(next.draft, next.base);
     change();
   };
   const visible = Object.keys(draft).filter((key) => {
@@ -294,7 +294,15 @@ export const KeyValueEditor = () => {
           <h2>{title}</h2>
           <span className="kv-muted">
             {pending ? (
-              "Saving..."
+              currentPending ? (
+                newerEdits ? (
+                  "Saving... New edits queued"
+                ) : (
+                  "Saving... You can keep editing"
+                )
+              ) : (
+                "Saving another record..."
+              )
             ) : count ? (
               <>
                 {count} unsaved change{count === 1 ? "" : "s"} marked in{" "}
@@ -304,17 +312,16 @@ export const KeyValueEditor = () => {
               "Up to date"
             )}
             {autoSave ? " | Autosave on" : ""}
+            {otherDirtyRecords > 0
+              ? ` | ${otherDirtyRecords} other record draft${otherDirtyRecords === 1 ? "" : "s"} retained`
+              : ""}
           </span>
         </div>
         <div className="kv-actions">
           <button
-            disabled={locked || !count}
+            disabled={disabled || currentPending || !count}
             onClick={() => {
-              setDraft(base);
-              publish(base, base);
-              setErrors({});
-              setMessage("");
-              attempted.current = "";
+              queue.discard(recordId);
               reset();
             }}
           >
@@ -322,10 +329,18 @@ export const KeyValueEditor = () => {
           </button>
           <button
             className="kv-save"
-            disabled={locked || !count || !!Object.keys(errors).length}
+            disabled={
+              disabled || !recordId || !saveable || !!Object.keys(errors).length
+            }
             onClick={requestSave}
           >
-            {pending ? "Saving..." : "Save changes"}
+            {pending
+              ? record.manual
+                ? "Save queued"
+                : saveable
+                  ? "Queue changes"
+                  : "Saving..."
+              : "Save changes"}
           </button>
         </div>
       </header>
@@ -406,7 +421,7 @@ export const KeyValueEditor = () => {
                     .replace(/_/g, " ")
                     .replace(/\b\w/g, (c) => c.toUpperCase());
                 const inputProps = {
-                  disabled: locked || readOnly,
+                  disabled: disabled || readOnly,
                   "aria-label": label,
                   "aria-invalid": !!errors[key],
                 };
@@ -553,7 +568,13 @@ export const KeyValueEditor = () => {
                             placeholder="Not set"
                             value={value ?? ""}
                             onChange={(e) =>
-                              edit(key, e.target.value, type, config)
+                              edit(
+                                key,
+                                e.target.value,
+                                type,
+                                config,
+                                e.target.validity.badInput,
+                              )
                             }
                           />
                         </div>
@@ -563,7 +584,7 @@ export const KeyValueEditor = () => {
                           type="button"
                           className="kv-input-clear"
                           aria-label={`Clear ${label}`}
-                          disabled={locked}
+                          disabled={disabled}
                           onClick={() => edit(key, null, type, config)}
                         >
                           <span aria-hidden="true">×</span>
