@@ -588,6 +588,56 @@
       ],
       "defaultHeight": 100,
       "defaultWidth": 12
+    },
+    "MultiSelectCascader": {
+      "name": "Multi Select Cascader",
+      "model": [
+        {
+          "name": "appTheme",
+          "initialValue": {},
+          "label": "App theme",
+          "description": "Bind to {{ theme }} to follow the app's colors and light/dark mode.",
+          "type": "object"
+        },
+        {
+          "name": "options",
+          "initialValue": [],
+          "description": "Flat rows: { value: string, label: string, parent: string | null, disabled?: boolean }. Reuse your Cascader data source.",
+          "type": "array"
+        },
+        {
+          "name": "value",
+          "initialValue": [],
+          "description": "Selected leaf values. Clear with setValue([]).",
+          "type": "array"
+        },
+        {
+          "name": "label",
+          "initialValue": "Measure Status Filter",
+          "type": "string"
+        },
+        {
+          "name": "placeholder",
+          "initialValue": "Select options",
+          "type": "string"
+        },
+        {
+          "name": "disabled",
+          "initialValue": false,
+          "type": "boolean"
+        },
+        {
+          "name": "pickerOnly",
+          "initialValue": false,
+          "description": "Show the picker directly, for use inside a Retool modal or other container.",
+          "type": "boolean"
+        }
+      ],
+      "events": [
+        "change"
+      ],
+      "defaultHeight": 10,
+      "defaultWidth": 4
     }
   }
 }

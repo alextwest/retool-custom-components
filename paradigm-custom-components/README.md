@@ -17,3 +17,5 @@ FileTree's background, header, selection, hover, text, and font fields remain op
 No theme binding preserves a light appearance. Partial themes receive mode-appropriate fallback colors. Crew/event colors, file-type icons, and configured badge colors remain data colors.
 
 Local validation: `npx retool-ccl build --skip-updates-check`. For the currently installed TypeScript version, run `npx tsc --noEmit --ignoreDeprecations 5.0` (the existing tsconfig specifies 6.0).
+
+MultiSelectCascader provides hierarchical multiselect filtering with search and tags. See [measure status setup and layout limitations](retool/MULTISELECT_CASCADER.md).

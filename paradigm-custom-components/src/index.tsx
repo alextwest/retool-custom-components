@@ -4,3 +4,4 @@ export { AddressAutoComplete } from "./AddressAutoComplete";
 export { KeyValueEditor } from "./KeyValueEditor";
 export { UpdatesComposer } from "./UpdatesComposer";
 export { ProjectUpdates } from "./ProjectUpdates";
+export { MultiSelectCascader } from "./MultiSelectCascader";
